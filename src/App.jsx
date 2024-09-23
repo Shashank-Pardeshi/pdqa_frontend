@@ -1,10 +1,7 @@
 import Inter from "../public/static/fonts/Inter.ttf";
-import { ThemeProvider, CssBaseline, createTheme, Box } from "@mui/material";
+import { ThemeProvider, CssBaseline, createTheme } from "@mui/material";
 import RootComponent from "./components/RootComponent";
 import RootPage from "./components/RootPage";
-import DataTable from "./test/DataTable";
-import Hello from "./test/Hello";
-// import "../app.css";
 import {
   Route,
   createBrowserRouter,
@@ -19,14 +16,15 @@ import Growth from "./components/bodyComponents/growth/Growth";
 import Report from "./components/bodyComponents/report/Report";
 import Setting from "./components/bodyComponents/Settings/Setting";
 import Order from "./components/bodyComponents/order/Order";
-import OrderModal from "./components/bodyComponents/order/OrderModal";
+import Register from "./components/bodyComponents/register/Register";
+import Login from "./components/bodyComponents/login/Login";
 
 function App() {
   const theme = createTheme({
     spacing: 4,
     palette: {
       mode: "light",
-
+      // Uncomment and adjust the primary colors as needed
       // primary: {
       //   main: "#573BFE",
       // },
@@ -41,7 +39,6 @@ function App() {
       //   main: "#E03137",
       // },
     },
-
     typography: {
       fontFamily: "Inter",
     },
@@ -59,21 +56,25 @@ function App() {
         `,
       },
     },
-    //here we customize our typographi and in the variant prop we can use out myVar value
   });
+
   const router = createBrowserRouter(
     createRoutesFromElements(
-      <Route path="/" element={<RootComponent />}>
-        <Route index element={<RootPage />} />
-        <Route path="/home" element={<Home />}></Route>
-        <Route path="/inventory" element={<Inventory />}></Route>
-        <Route path="/orders" element={<Order />}></Route>
-        <Route path="/customers" element={<Customer />}></Route>
-        <Route path="/revenue" element={<Revenue />}></Route>
-        <Route path="/growth" element={<Growth />}></Route>
-        <Route path="/reports" element={<Report />}></Route>
-        <Route path="/settings" element={<Setting />}></Route>
-      </Route>
+      <>
+        <Route path="/" element={<RootComponent />}>
+          <Route index element={<RootPage />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/orders" element={<Order />} />
+          <Route path="/customers" element={<Customer />} />
+          <Route path="/revenue" element={<Revenue />} />
+          <Route path="/growth" element={<Growth />} />
+          <Route path="/reports" element={<Report />} />
+          <Route path="/settings" element={<Setting />} />
+        </Route>
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+      </>
     )
   );
 
