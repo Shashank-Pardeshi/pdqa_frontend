@@ -117,13 +117,11 @@ export default function Register() {
         // Prepare the payload
         const payload = {
           enterpriseName: formData.enterpriseName,
-          enterpriseDescription: formData.enterpriseDescription,
-          numberOfStores: parseInt(formData.numberOfStores, 10),
-          storeDetails: formData.storeDetails.map((store) => ({
-            inventoryCounters: parseInt(store.inventoryCounters, 10),
-            billingCounters: parseInt(store.billingCounters, 10),
-          })),
-          enterprisePassword: formData.enterprisePassword,
+          password: formData.enterprisePassword,
+          listOfStoreDetails: formData.storeDetails.map((store) => [
+            parseInt(store.billingCounters, 10), // First element for billing counters
+            parseInt(store.inventoryCounters, 10), // Second element for inventory counters
+          ]),
         };
 
         const response = await fetch("/api/gateway/signup", {
@@ -312,7 +310,6 @@ export default function Register() {
                   required
                 />
               </Grid>
-
               <Grid item xs={12}>
                 <TextField
                   label="Number of Stores"
@@ -330,80 +327,71 @@ export default function Register() {
             </Grid>
 
             {/* Store Details */}
-            {formData.numberOfStores > 0 && (
-              <>
-                <Typography variant="h6" sx={{ mt: 4 }}>
-                  Store Details
-                </Typography>
-
-                <TableContainer component={Paper} sx={{ mt: 2 }}>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Store Number</TableCell>
-                        <TableCell>Billing Counters</TableCell>
-                        <TableCell>Inventory Counters</TableCell>
+            <Typography variant="h6" sx={{ mt: 2 }}>
+              Store Details
+            </Typography>
+            {formData.storeDetails.length > 0 && (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Store Number</TableCell>
+                      <TableCell>Billing Counters</TableCell>
+                      <TableCell>Inventory Counters</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {formData.storeDetails.map((store, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>
+                          <TextField
+                            type="number"
+                            value={store.billingCounters}
+                            onChange={(e) =>
+                              handleStoreChange(
+                                index,
+                                "billingCounters",
+                                e.target.value
+                              )
+                            }
+                            error={!!errors[`billingCounters_${index}`]}
+                            helperText={errors[`billingCounters_${index}`]}
+                            fullWidth
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            type="number"
+                            value={store.inventoryCounters}
+                            onChange={(e) =>
+                              handleStoreChange(
+                                index,
+                                "inventoryCounters",
+                                e.target.value
+                              )
+                            }
+                            error={!!errors[`inventoryCounters_${index}`]}
+                            helperText={errors[`inventoryCounters_${index}`]}
+                            fullWidth
+                          />
+                        </TableCell>
                       </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {formData.storeDetails.map((store, index) => (
-                        <TableRow key={index}>
-                          <TableCell>Store {index + 1}</TableCell>
-                          <TableCell>
-                            <TextField
-                              variant="outlined"
-                              name={`billingCounters_${index}`}
-                              value={store.billingCounters}
-                              onChange={(e) =>
-                                handleStoreChange(
-                                  index,
-                                  "billingCounters",
-                                  e.target.value
-                                )
-                              }
-                              error={!!errors[`billingCounters_${index}`]}
-                              helperText={errors[`billingCounters_${index}`]}
-                              sx={{ backgroundColor: "#fff" }}
-                              required
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <TextField
-                              variant="outlined"
-                              name={`inventoryCounters_${index}`}
-                              value={store.inventoryCounters}
-                              onChange={(e) =>
-                                handleStoreChange(
-                                  index,
-                                  "inventoryCounters",
-                                  e.target.value
-                                )
-                              }
-                              error={!!errors[`inventoryCounters_${index}`]}
-                              helperText={errors[`inventoryCounters_${index}`]}
-                              sx={{ backgroundColor: "#fff" }}
-                              required
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             )}
 
-            {/* Submit button */}
-            <Box display="flex" justifyContent="center" mt={4}>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                disabled={loading}
-              >
-                {loading ? <CircularProgress size={24} /> : "Register"}
-              </Button>
-            </Box>
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              sx={{ mt: 3 }}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={24} /> : "Register"}
+            </Button>
           </Box>
         </form>
       </Box>
