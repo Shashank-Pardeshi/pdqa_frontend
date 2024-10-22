@@ -13,7 +13,6 @@ const AddProduct = () => {
   const [productName, setProductName] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [sellingPrice, setSellingPrice] = useState("");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -36,29 +35,44 @@ const AddProduct = () => {
       return false;
     }
 
-    const price = parseFloat(sellingPrice);
-    if (isNaN(price) || price <= 0) {
-      setError("Selling price must be a float greater than 0.");
-      return false;
-    }
-
     return true;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (validateForm()) {
       const productData = {
         productName,
         productDescription,
         category,
-        sellingPrice: parseFloat(sellingPrice),
       };
 
-      console.log("Product added:", productData);
-      setSuccessMessage("Product added successfully!");
-      setOpenSnackbar(true);
-      resetForm();
+      try {
+        const response = await fetch("/api/gateway/inventory/addProduct", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            productName: productData.productName,
+            productCategory: productData.category,
+            description: productData.productDescription,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to add product.");
+        }
+
+        const data = await response.json();
+        console.log("Product added:", data);
+        setSuccessMessage("Product added successfully!");
+        setOpenSnackbar(true);
+        resetForm();
+      } catch (error) {
+        console.error("Error adding product:", error);
+        setError("Failed to add product. Please try again.");
+      }
     }
   };
 
@@ -66,7 +80,6 @@ const AddProduct = () => {
     setProductName("");
     setProductDescription("");
     setCategory("");
-    setSellingPrice("");
     setError("");
   };
 
@@ -146,34 +159,6 @@ const AddProduct = () => {
             label="Category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            fullWidth
-            required
-            margin="normal"
-            variant="outlined"
-            sx={{
-              backgroundColor: "#fff",
-              borderRadius: 1,
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: "#1976D2",
-                },
-                "&:hover fieldset": {
-                  borderColor: "#125a9c",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#1976D2",
-                },
-              },
-            }}
-          />
-        </Box>
-        <Box mb={2}>
-          <TextField
-            label="Selling Price"
-            value={sellingPrice}
-            onChange={(e) => setSellingPrice(e.target.value)}
-            type="number"
-            step="0.01"
             fullWidth
             required
             margin="normal"

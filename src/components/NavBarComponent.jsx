@@ -78,15 +78,15 @@ export default function NavBarComponent() {
                     alignItems: "center",
                   }}
                 >
-                  <IconButton color="inherit">
+                  {/* <IconButton color="inherit">
                     <Badge variant="dot" color="error" invisible={false}>
                       <NotificationsOutlined
                         sx={{ width: 32, height: 32 }}
                         onClick={handleNotificationClicked}
                       />
                     </Badge>
-                  </IconButton>
-                  <Menu
+                  </IconButton> */}
+                  {/* <Menu
                     open={notificationOpen}
                     anchorEl={notificationAnchorEl}
                     onClick={notificationHandleClose}
@@ -96,8 +96,8 @@ export default function NavBarComponent() {
                     <Divider />
                     <MenuItem>Notification number 2</MenuItem>
                     <MenuItem>Notification number 3</MenuItem>
-                  </Menu>
-                  <IconButton
+                  </Menu> */}
+                  {/* <IconButton
                     onClick={handleAvatarClicked}
                     size="small"
                     sx={{ mx: 2 }}
@@ -106,8 +106,8 @@ export default function NavBarComponent() {
                     <Tooltip title="account settings">
                       <Avatar sx={{ width: 32, height: 32 }}>U</Avatar>
                     </Tooltip>
-                  </IconButton>
-                  <Typography fontFamily={"Inter"}>User</Typography>
+                  </IconButton> */}
+                  {/* <Typography fontFamily={"Inter"}>User</Typography> */}
                 </Box>
 
                 <Menu

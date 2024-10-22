@@ -78,7 +78,8 @@ export default function AddStore() {
         backgroundColor: "#f9f9f9",
         borderRadius: 3,
         boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-        marginLeft: "15px",
+        marginLeft: "85px",
+        width: "800px",
       }}
     >
       <Typography variant="h4" gutterBottom align="center" color="primary">

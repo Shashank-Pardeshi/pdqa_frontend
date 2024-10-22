@@ -17,6 +17,10 @@ import {
   Select,
   MenuItem,
   Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import * as XLSX from "xlsx";
 import axios from "axios";
@@ -27,6 +31,7 @@ export default function UpdateInventory() {
   const [uploadOption, setUploadOption] = useState(""); // Either 'file' or 'manual'
   const [file, setFile] = useState(null);
   const [data, setData] = useState([]);
+  const [csvErrors, setCsvErrors] = useState([]); // To track errors in CSV data
   const [newProduct, setNewProduct] = useState({
     name: "",
     category: "",
@@ -35,6 +40,10 @@ export default function UpdateInventory() {
     description: "",
     gst: "",
   });
+  const [sampleCSVOpen, setSampleCSVOpen] = useState(false); // Track dialog state
+  const [errors, setErrors] = useState({});
+
+  const validCategories = ["Electronics", "Furniture", "Clothing", "Food"];
 
   // Handle store selection and inventory ID selection
   const handleStoreChange = (e) => {
@@ -45,7 +54,7 @@ export default function UpdateInventory() {
     setInventoryId(e.target.value);
   };
 
-  // Handle file upload and parse the excel file
+  // Handle file upload and parse the excel file with validation
   const handleFileUpload = (e) => {
     const uploadedFile = e.target.files[0];
     setFile(uploadedFile);
@@ -57,9 +66,43 @@ export default function UpdateInventory() {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const parsedData = XLSX.utils.sheet_to_json(sheet);
-      setData(parsedData);
+
+      const { validData, errors } = validateCSVData(parsedData);
+      setData(validData);
+      setCsvErrors(errors);
     };
     reader.readAsBinaryString(uploadedFile);
+  };
+
+  // Validate CSV data based on the same validation rules as manual input
+  const validateCSVData = (csvData) => {
+    const nameRegex = /^[A-Za-z\s]+$/;
+    const alphanumericRegex = /^[a-zA-Z0-9\s]+$/;
+    const newErrors = [];
+    const validData = csvData.map((row, index) => {
+      const errorsForRow = {};
+
+      if (!nameRegex.test(row.name)) {
+        errorsForRow.name = "Product name should contain only letters.";
+      }
+
+      if (!validCategories.includes(row.category)) {
+        errorsForRow.category =
+          "Invalid category. Must be one of: " + validCategories.join(", ");
+      }
+
+      if (!alphanumericRegex.test(row.description)) {
+        errorsForRow.description = "Description should be alphanumeric.";
+      }
+
+      if (Object.keys(errorsForRow).length > 0) {
+        newErrors.push({ rowIndex: index + 1, ...errorsForRow });
+      }
+
+      return row; // Return row to keep the data intact
+    });
+
+    return { validData, errors: newErrors };
   };
 
   // Handle option selection for adding inventory
@@ -80,6 +123,12 @@ export default function UpdateInventory() {
       alert("Please select Store ID and Inventory ID.");
       return;
     }
+
+    if (csvErrors.length > 0) {
+      alert("Please fix the CSV errors before submitting.");
+      return;
+    }
+
     try {
       await axios.post("/api/inventory/update", { data, storeId, inventoryId }); // Sends data to the backend
       alert("Products have been updated successfully.");
@@ -87,6 +136,28 @@ export default function UpdateInventory() {
       console.error("Error updating inventory:", err);
       alert("There was an error updating the inventory.");
     }
+  };
+
+  // Validation for the new product form fields
+  const validateForm = () => {
+    const newErrors = {};
+    const nameRegex = /^[A-Za-z\s]+$/;
+    const alphanumericRegex = /^[a-zA-Z0-9\s]+$/;
+
+    if (!nameRegex.test(newProduct.name)) {
+      newErrors.name = "Product name should contain only letters.";
+    }
+
+    if (!validCategories.includes(newProduct.category)) {
+      newErrors.category = "Please select a valid category.";
+    }
+
+    if (!alphanumericRegex.test(newProduct.description)) {
+      newErrors.description = "Description should be alphanumeric.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Check if any errors exist
   };
 
   // Handle form field change for adding a new product
@@ -97,15 +168,35 @@ export default function UpdateInventory() {
 
   // Add new product to the data
   const handleAddProduct = () => {
-    setData([...data, newProduct]);
-    setNewProduct({
-      name: "",
-      category: "",
-      selling_price: "",
-      quantity: "",
-      description: "",
-      gst: "",
-    });
+    if (!storeId || !inventoryId) {
+      alert("Please select Store ID and Inventory ID before adding a product.");
+      return;
+    }
+
+    if (validateForm()) {
+      setData([...data, newProduct]);
+      setNewProduct({
+        name: "",
+        category: "",
+        selling_price: "",
+        quantity: "",
+        description: "",
+        gst: "",
+      });
+      setErrors({});
+    } else {
+      alert("Please correct the errors before adding the product.");
+    }
+  };
+
+  // Handle opening sample CSV dialog
+  const handleSampleCSVOpen = () => {
+    setSampleCSVOpen(true);
+  };
+
+  // Handle closing sample CSV dialog
+  const handleSampleCSVClose = () => {
+    setSampleCSVOpen(false);
   };
 
   return (
@@ -163,36 +254,76 @@ export default function UpdateInventory() {
         {/* Show the XLSX upload section if file option is selected */}
         {uploadOption === "file" && (
           <>
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleFileUpload}
-              style={{ marginBottom: "20px" }}
-            />
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={handleSampleCSVOpen}
+            >
+              View Sample CSV
+            </Button>
 
-            {file && (
-              <TableContainer component={Paper} sx={{ mt: 2 }}>
+            {/* Sample CSV Dialog */}
+            <Dialog open={sampleCSVOpen} onClose={handleSampleCSVClose}>
+              <DialogTitle>Sample CSV Format</DialogTitle>
+              <DialogContent>
+                <pre>
+                  {`Name, Category, Selling Price, Quantity, Description, GST
+Example Product 1, Electronics, 1000, 10, "A description of product 1", 18`}
+                </pre>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleSampleCSVClose} color="primary">
+                  Close
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            <Button
+              variant="contained"
+              component="label"
+              color="primary"
+              sx={{ mt: 2, mb: 2 }}
+            >
+              Upload File
+              <input
+                type="file"
+                hidden
+                accept=".xlsx, .xls"
+                onChange={handleFileUpload}
+              />
+            </Button>
+
+            {/* Display CSV Errors if any */}
+            {csvErrors.length > 0 && (
+              <Paper
+                elevation={2}
+                sx={{ p: 2, mt: 2, backgroundColor: "#ffe6e6" }}
+              >
+                <Typography variant="h6" color="error" gutterBottom>
+                  CSV Errors:
+                </Typography>
+                <ul>
+                  {csvErrors.map((error, idx) => (
+                    <li key={idx}>
+                      Row {error.rowIndex}: {Object.values(error).join(", ")}
+                    </li>
+                  ))}
+                </ul>
+              </Paper>
+            )}
+
+            {/* Display the uploaded data */}
+            {data.length > 0 && (
+              <TableContainer component={Paper} sx={{ mt: 3 }}>
                 <Table>
-                  <TableHead sx={{ backgroundColor: "#f0f0f0" }}>
+                  <TableHead>
                     <TableRow>
-                      <TableCell>
-                        <strong>Name</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>Category</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>Selling Price</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>Quantity</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>Description</strong>
-                      </TableCell>
-                      <TableCell>
-                        <strong>GST</strong>
-                      </TableCell>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Category</TableCell>
+                      <TableCell>Selling Price</TableCell>
+                      <TableCell>Quantity</TableCell>
+                      <TableCell>Description</TableCell>
+                      <TableCell>GST</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -200,7 +331,7 @@ export default function UpdateInventory() {
                       <TableRow key={index}>
                         <TableCell>
                           <TextField
-                            value={row.name}
+                            value={row.name || ""}
                             onChange={(e) =>
                               handleFieldChange(index, "name", e.target.value)
                             }
@@ -208,7 +339,7 @@ export default function UpdateInventory() {
                         </TableCell>
                         <TableCell>
                           <TextField
-                            value={row.category}
+                            value={row.category || ""}
                             onChange={(e) =>
                               handleFieldChange(
                                 index,
@@ -220,8 +351,7 @@ export default function UpdateInventory() {
                         </TableCell>
                         <TableCell>
                           <TextField
-                            type="number"
-                            value={row.selling_price}
+                            value={row.selling_price || ""}
                             onChange={(e) =>
                               handleFieldChange(
                                 index,
@@ -233,8 +363,7 @@ export default function UpdateInventory() {
                         </TableCell>
                         <TableCell>
                           <TextField
-                            type="number"
-                            value={row.quantity}
+                            value={row.quantity || ""}
                             onChange={(e) =>
                               handleFieldChange(
                                 index,
@@ -246,7 +375,7 @@ export default function UpdateInventory() {
                         </TableCell>
                         <TableCell>
                           <TextField
-                            value={row.description}
+                            value={row.description || ""}
                             onChange={(e) =>
                               handleFieldChange(
                                 index,
@@ -258,8 +387,7 @@ export default function UpdateInventory() {
                         </TableCell>
                         <TableCell>
                           <TextField
-                            type="number"
-                            value={row.gst}
+                            value={row.gst || ""}
                             onChange={(e) =>
                               handleFieldChange(index, "gst", e.target.value)
                             }
@@ -274,90 +402,103 @@ export default function UpdateInventory() {
           </>
         )}
 
-        {/* Show the manual product addition form if manual option is selected */}
+        {/* Show form to manually add product if manual option is selected */}
         {uploadOption === "manual" && (
-          <div style={{ marginTop: "20px" }}>
-            <Typography variant="h6">Add New Product</Typography>
+          <Box component={Paper} p={2} mb={3}>
+            <Typography variant="h6" gutterBottom>
+              Add New Product
+            </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label="Product Name"
                   name="name"
+                  fullWidth
                   value={newProduct.name}
                   onChange={handleNewProductChange}
-                  fullWidth
+                  error={!!errors.name}
+                  helperText={errors.name}
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  label="Category"
-                  name="category"
-                  value={newProduct.category}
-                  onChange={handleNewProductChange}
-                  fullWidth
-                />
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Category</InputLabel>
+                  <Select
+                    name="category"
+                    value={newProduct.category}
+                    onChange={handleNewProductChange}
+                    error={!!errors.category}
+                  >
+                    {validCategories.map((category, idx) => (
+                      <MenuItem key={idx} value={category}>
+                        {category}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label="Selling Price"
                   name="selling_price"
-                  type="number"
+                  fullWidth
                   value={newProduct.selling_price}
                   onChange={handleNewProductChange}
-                  fullWidth
                 />
               </Grid>
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label="Quantity"
                   name="quantity"
-                  type="number"
+                  fullWidth
                   value={newProduct.quantity}
                   onChange={handleNewProductChange}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  label="Description"
-                  name="description"
-                  value={newProduct.description}
-                  onChange={handleNewProductChange}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  label="GST"
-                  name="gst"
-                  type="number"
-                  value={newProduct.gst}
-                  onChange={handleNewProductChange}
-                  fullWidth
                 />
               </Grid>
               <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  onClick={handleAddProduct}
-                  sx={{ mt: 2 }}
-                >
-                  Add Product
-                </Button>
+                <TextField
+                  label="Description"
+                  name="description"
+                  fullWidth
+                  value={newProduct.description}
+                  onChange={handleNewProductChange}
+                  error={!!errors.description}
+                  helperText={errors.description}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="GST (%)"
+                  name="gst"
+                  fullWidth
+                  value={newProduct.gst}
+                  onChange={handleNewProductChange}
+                />
               </Grid>
             </Grid>
-          </div>
+            <Box display="flex" justifyContent="center" mt={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleAddProduct}
+              >
+                Add Product
+              </Button>
+            </Box>
+          </Box>
         )}
 
         {/* Submit Button */}
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSubmit}
-          sx={{ mt: 4 }}
-        >
-          Update Inventory
-        </Button>
+        <Box display="flex" justifyContent="center">
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            sx={{ mt: 2 }}
+          >
+            Submit
+          </Button>
+        </Box>
       </Paper>
     </Container>
   );
