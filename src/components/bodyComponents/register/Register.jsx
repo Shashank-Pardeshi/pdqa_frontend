@@ -19,6 +19,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -34,6 +35,8 @@ export default function Register() {
   const [errorMessage, setErrorMessage] = useState(""); // Error feedback
   const [enterpriseId, setEnterpriseId] = useState(null); // Store the unique enterprise ID
   const [showPassword, setShowPassword] = useState(false); // Toggle password visibility
+
+  const navigate = useNavigate(); // Initialize navigate
 
   // Validation function
   const validate = () => {
@@ -163,6 +166,9 @@ export default function Register() {
           enterprisePassword: "",
         });
         setErrors({});
+
+        // Redirect to home page after successful registration
+        navigate("/home");
       } catch (error) {
         setErrorMessage(error.message);
       } finally {
@@ -281,8 +287,8 @@ export default function Register() {
                   error={!!errors.enterprisePassword}
                   helperText={errors.enterprisePassword}
                   fullWidth
-                  sx={{ backgroundColor: "#fff" }}
                   required
+                  sx={{ backgroundColor: "#fff" }}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -297,7 +303,10 @@ export default function Register() {
                   }}
                 />
               </Grid>
-              <Grid item xs={12}>
+            </Grid>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label="Enterprise Description"
                   variant="outlined"
@@ -311,7 +320,7 @@ export default function Register() {
                   required
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label="Number of Stores"
                   variant="outlined"
@@ -328,71 +337,84 @@ export default function Register() {
             </Grid>
 
             {/* Store Details */}
-            <Typography variant="h6" sx={{ mt: 2 }}>
-              Store Details
-            </Typography>
             {formData.storeDetails.length > 0 && (
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Store Number</TableCell>
-                      <TableCell>Billing Counters</TableCell>
-                      <TableCell>Inventory Counters</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {formData.storeDetails.map((store, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>
-                          <TextField
-                            type="number"
-                            value={store.billingCounters}
-                            onChange={(e) =>
-                              handleStoreChange(
-                                index,
-                                "billingCounters",
-                                e.target.value
-                              )
-                            }
-                            error={!!errors[`billingCounters_${index}`]}
-                            helperText={errors[`billingCounters_${index}`]}
-                            fullWidth
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            type="number"
-                            value={store.inventoryCounters}
-                            onChange={(e) =>
-                              handleStoreChange(
-                                index,
-                                "inventoryCounters",
-                                e.target.value
-                              )
-                            }
-                            error={!!errors[`inventoryCounters_${index}`]}
-                            helperText={errors[`inventoryCounters_${index}`]}
-                            fullWidth
-                          />
-                        </TableCell>
+              <>
+                <Typography variant="h6" sx={{ mt: 2 }}>
+                  Store Details
+                </Typography>
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell align="center">Store Number</TableCell>
+                        <TableCell align="center">Billing Counters</TableCell>
+                        <TableCell align="center">Inventory Counters</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {formData.storeDetails.map((store, index) => (
+                        <TableRow key={index}>
+                          <TableCell align="center">
+                            Store {index + 1}
+                          </TableCell>
+                          <TableCell align="center">
+                            <TextField
+                              type="number"
+                              name={`billingCounters_${index}`}
+                              value={store.billingCounters}
+                              onChange={(e) =>
+                                handleStoreChange(
+                                  index,
+                                  "billingCounters",
+                                  e.target.value
+                                )
+                              }
+                              error={!!errors[`billingCounters_${index}`]}
+                              helperText={errors[`billingCounters_${index}`]}
+                              fullWidth
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            <TextField
+                              type="number"
+                              name={`inventoryCounters_${index}`}
+                              value={store.inventoryCounters}
+                              onChange={(e) =>
+                                handleStoreChange(
+                                  index,
+                                  "inventoryCounters",
+                                  e.target.value
+                                )
+                              }
+                              error={!!errors[`inventoryCounters_${index}`]}
+                              helperText={errors[`inventoryCounters_${index}`]}
+                              fullWidth
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
             )}
 
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              sx={{ mt: 3 }}
-              disabled={loading}
-            >
-              {loading ? <CircularProgress size={24} /> : "Register"}
-            </Button>
+            {/* Submit button */}
+            <Box display="flex" justifyContent="center">
+              <Button
+                variant="contained"
+                type="submit"
+                sx={{ mt: 3, backgroundColor: "#1976D2", color: "#fff" }}
+                disabled={loading}
+                fullWidth
+              >
+                {loading ? (
+                  <CircularProgress size={24} sx={{ color: "#fff" }} />
+                ) : (
+                  "Register"
+                )}
+              </Button>
+            </Box>
           </Box>
         </form>
       </Box>
