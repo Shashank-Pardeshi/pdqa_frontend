@@ -43,31 +43,39 @@ export default function SideBarComponent() {
       component: <HomeOutlined fontSize="medium" color="primary" />,
     },
     {
-      title: "Inventory",
+      title: "UpdateInventory",
       component: <Inventory2Outlined fontSize="medium" color="primary" />,
     },
     {
-      title: "Orders",
+      title: "ViewInventory",
+      component: <Inventory2Outlined fontSize="medium" color="primary" />,
+    },
+    {
+      title: "AddStore",
       component: <CardTravelOutlined fontSize="medium" color="primary" />,
     },
+    // {
+    //   title: "Customers",
+    //   component: <PeopleAltOutlined fontSize="medium" color="primary" />,
+    // },
+    // {
+    //   title: "Revenue",
+    //   component: <MonetizationOnOutlined fontSize="medium" color="primary" />,
+    // },
+    // {
+    //   title: "Growth",
+    //   component: <TrendingUpOutlined fontSize="medium" color="primary" />,
+    // },
+    // {
+    //   title: "Reports",
+    //   component: <DescriptionOutlined fontSize="medium" color="primary" />,
+    // },
+    // {
+    //   title: "Settings",
+    //   component: <SettingsOutlined fontSize="medium" color="primary" />,
+    // },
     {
-      title: "Customers",
-      component: <PeopleAltOutlined fontSize="medium" color="primary" />,
-    },
-    {
-      title: "Revenue",
-      component: <MonetizationOnOutlined fontSize="medium" color="primary" />,
-    },
-    {
-      title: "Growth",
-      component: <TrendingUpOutlined fontSize="medium" color="primary" />,
-    },
-    {
-      title: "Reports",
-      component: <DescriptionOutlined fontSize="medium" color="primary" />,
-    },
-    {
-      title: "Settings",
+      title: "Billing",
       component: <SettingsOutlined fontSize="medium" color="primary" />,
     },
   ];

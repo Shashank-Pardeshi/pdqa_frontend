@@ -9,15 +9,13 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import Home from "./components/bodyComponents/home/Home";
-import Inventory from "./components/bodyComponents/inventory/Inventory";
-import Customer from "./components/bodyComponents/customer/Customer";
-import Revenue from "./components/bodyComponents/revenue/Revenue";
-import Growth from "./components/bodyComponents/growth/Growth";
-import Report from "./components/bodyComponents/report/Report";
-import Setting from "./components/bodyComponents/Settings/Setting";
-import Order from "./components/bodyComponents/order/Order";
+
 import Register from "./components/bodyComponents/register/Register";
 import Login from "./components/bodyComponents/login/Login";
+import BillingSystem from "./components/bodyComponents/BillingSystem/BillingSystem";
+import AddStore from "./components/bodyComponents/AddStore/AddStore";
+import UpdateInventory from "./components/bodyComponents/Inventory/UpdateInventory";
+import ViewInventory from "./components/bodyComponents/Inventory/ViewInventory";
 
 function App() {
   const theme = createTheme({
@@ -64,13 +62,10 @@ function App() {
         <Route path="/" element={<RootComponent />}>
           <Route index element={<RootPage />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/orders" element={<Order />} />
-          <Route path="/customers" element={<Customer />} />
-          <Route path="/revenue" element={<Revenue />} />
-          <Route path="/growth" element={<Growth />} />
-          <Route path="/reports" element={<Report />} />
-          <Route path="/settings" element={<Setting />} />
+          <Route path="/updateinventory" element={<UpdateInventory />} />
+          <Route path="/viewinventory" element={<ViewInventory />} />
+          <Route path="/AddStore" element={<AddStore />} />
+          <Route path="/billing" element={<BillingSystem />} />
         </Route>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />

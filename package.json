@@ -14,13 +14,21 @@
     "@emotion/styled": "^11.11.0",
     "@iconscout/react-unicons": "^2.0.2",
     "@mui/icons-material": "^5.14.1",
-    "@mui/material": "^5.14.2",
+    "@mui/material": "^5.16.7",
     "@mui/x-data-grid": "^6.11.1",
+    "axios": "^1.7.7",
+    "body-parser": "^1.20.3",
+    "express": "^4.21.1",
     "inventory-management-system": "file:",
+    "jspdf": "^2.5.2",
+    "mongoose": "^8.7.1",
+    "multer": "^1.4.5-lts.1",
     "react": "^18.2.0",
     "react-apexcharts": "^1.4.1",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.11.2"
+    "react-router-dom": "^6.11.2",
+    "react-to-print": "^3.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

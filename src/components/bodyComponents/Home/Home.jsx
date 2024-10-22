@@ -1,98 +1,82 @@
-import React, { Component } from "react";
-import { Box, Grid } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import {
+  Container,
+  Typography,
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@mui/material";
 
-import UilReceipt from "@iconscout/react-unicons/icons/uil-receipt";
-import UilBox from "@iconscout/react-unicons/icons/uil-box";
-import UilTruck from "@iconscout/react-unicons/icons/uil-truck";
-import UilCheckCircle from "@iconscout/react-unicons/icons/uil-check-circle";
-import InfoCard from "../../subComponents/InfoCard";
-import TotalSales from "./TotalSales";
-import SalesByCity from "./SalesByCity";
-import Channels from "./Channels";
-import TopSellingProduct from "./TopSellingProduct";
-export default class Home extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
+export default function HomePage() {
+  const [enterpriseId, setEnterpriseId] = useState(null);
+  const [storeDetails, setStoreDetails] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  render() {
-    const data = {};
-    const cardComponent = [
-      {
-        icon: <UilBox size={60} color={"#F6F4EB"} />,
-        title: "Picked",
-        subTitle: "1256",
-        mx: 3,
-        my: 0,
-      },
-      {
-        icon: <UilTruck size={60} color={"#F6F4EB"} />,
-        title: "Shipped",
-        subTitle: "12",
-        mx: 5,
-        my: 0,
-      },
-      {
-        icon: <UilCheckCircle size={60} color={"#F6F4EB"} />,
-        title: "Delivered",
-        subTitle: "15",
-        mx: 5,
-        my: 0,
-      },
-      {
-        icon: <UilReceipt size={60} color={"#F6F4EB"} />,
-        title: "Invoice",
-        subTitle: "07",
-        mx: 3,
-        my: 0,
-      },
-    ];
+  useEffect(() => {
+    // Retrieve data from local storage
+    const storedEnterpriseId = localStorage.getItem("enterpriseId");
+    const storedStoreDetails = localStorage.getItem("storeDetails");
 
-    return (
-      <Box
-        sx={{
-          margin: 0,
-          // bgcolor: "grey",
-          // borderRadius: 5,
-          padding: 3,
-        }}
-      >
-        <Grid
-          container
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginX: 3,
-            borderRadius: 2,
-            padding: 0,
-          }}
-        >
-          {cardComponent.map((card, index) => (
-            <Grid item md={3} key={index}>
-              <InfoCard card={card} />
-            </Grid>
-          ))}
-        </Grid>
+    if (storedEnterpriseId) {
+      setEnterpriseId(storedEnterpriseId);
+    } else {
+      setErrorMessage("No enterprise ID found. Please register.");
+    }
 
-        <Grid container sx={{ marginX: 3 }}>
-          <Grid item md={8}>
-            <TotalSales data={data} />
-          </Grid>
-          <Grid item md={4}>
-            <SalesByCity data={data} />
-          </Grid>
-        </Grid>
+    if (storedStoreDetails) {
+      setStoreDetails(JSON.parse(storedStoreDetails));
+    } else {
+      setErrorMessage("No store details found.");
+    }
+  }, []);
 
-        <Grid container sx={{ margin: 3 }}>
-          <Grid item md={6}>
-            <Channels />
-          </Grid>
-          <Grid item md={6}>
-            <TopSellingProduct />
-          </Grid>
-        </Grid>
-      </Box>
-    );
-  }
+  return (
+    <Container maxWidth="md" sx={{ mt: 5 }}>
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Alert>
+      )}
+
+      <Typography variant="h4" gutterBottom>
+        Welcome to Your Home Page
+      </Typography>
+
+      {enterpriseId && (
+        <Typography variant="h6" gutterBottom>
+          Your Enterprise ID: {enterpriseId}
+        </Typography>
+      )}
+
+      <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>
+        Store Details
+      </Typography>
+      {storeDetails.length > 0 ? (
+        <Table component={Paper}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Store No.</TableCell>
+              <TableCell>Billing Counters</TableCell>
+              <TableCell>Inventory Counters</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {storeDetails.map((store, index) => (
+              <TableRow key={index}>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>{store.billingCounters}</TableCell>
+                <TableCell>{store.inventoryCounters}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <Typography>No store details available.</Typography>
+      )}
+    </Container>
+  );
 }
