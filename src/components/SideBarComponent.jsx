@@ -54,6 +54,10 @@ export default function SideBarComponent() {
       title: "AddStore",
       component: <CardTravelOutlined fontSize="medium" color="primary" />,
     },
+    {
+      title: "AddProduct",
+      component: <CardTravelOutlined fontSize="medium" color="primary" />,
+    },
     // {
     //   title: "Customers",
     //   component: <PeopleAltOutlined fontSize="medium" color="primary" />,

@@ -115,6 +115,7 @@ export default function Register() {
       setLoading(true);
       try {
         // Prepare the payload
+
         const payload = {
           enterpriseName: formData.enterpriseName,
           password: formData.enterprisePassword,

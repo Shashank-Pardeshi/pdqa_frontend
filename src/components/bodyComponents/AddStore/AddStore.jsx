@@ -29,14 +29,20 @@ export default function AddStore() {
   };
 
   const handleAddStore = async () => {
-    if (!storeForm.billingCounter || !storeForm.inventoryCounter) {
-      alert("Please fill in all fields");
+    const billingCount = parseInt(storeForm.billingCounter);
+    const inventoryCount = parseInt(storeForm.inventoryCounter);
+
+    // Validation: Check if counters are greater than 0
+    if (billingCount <= 0 || inventoryCount <= 0) {
+      alert(
+        "Both billing counters and inventory counters must be greater than 0."
+      );
       return;
     }
 
     const newStore = {
-      billingCounter: parseInt(storeForm.billingCounter),
-      inventoryCounter: parseInt(storeForm.inventoryCounter),
+      billingCounter: billingCount,
+      inventoryCounter: inventoryCount,
     };
 
     try {
@@ -69,9 +75,10 @@ export default function AddStore() {
       sx={{
         mt: 5,
         p: 4,
-        backgroundColor: "#f0f4f8",
+        backgroundColor: "#f9f9f9",
         borderRadius: 3,
         boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+        marginLeft: "15px",
       }}
     >
       <Typography variant="h4" gutterBottom align="center" color="primary">
