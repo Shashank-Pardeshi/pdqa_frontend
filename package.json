@@ -18,6 +18,7 @@
     "@mui/x-data-grid": "^6.11.1",
     "axios": "^1.7.7",
     "body-parser": "^1.20.3",
+    "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "inventory-management-system": "file:",
     "jspdf": "^2.5.2",

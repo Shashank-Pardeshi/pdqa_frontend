@@ -15,7 +15,10 @@ import {
   TableHead,
   TableRow,
   Paper,
+  IconButton,
+  InputAdornment,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -30,29 +33,52 @@ export default function Register() {
   const [successMessage, setSuccessMessage] = useState(""); // Success feedback
   const [errorMessage, setErrorMessage] = useState(""); // Error feedback
   const [enterpriseId, setEnterpriseId] = useState(null); // Store the unique enterprise ID
+  const [showPassword, setShowPassword] = useState(false); // Toggle password visibility
 
   // Validation function
   const validate = () => {
     let tempErrors = {};
 
-    // Enterprise Fields
-    if (!formData.enterpriseName.trim())
+    // Enterprise Name validation (alphabets only)
+    const namePattern = /^[A-Za-z]+$/;
+    if (!formData.enterpriseName.trim()) {
       tempErrors.enterpriseName = "Enterprise Name is required";
-    if (!formData.enterpriseDescription.trim())
-      tempErrors.enterpriseDescription = "Enterprise Description is required";
-    if (!formData.enterprisePassword.trim())
-      tempErrors.enterprisePassword = "Enterprise Password is required";
+    } else if (!namePattern.test(formData.enterpriseName.trim())) {
+      tempErrors.enterpriseName =
+        "Enterprise Name should only contain alphabets";
+    }
 
-    // Number of Stores
-    if (formData.numberOfStores === "")
+    // Enterprise Description validation (alphanumeric only)
+    const descriptionPattern = /^[A-Za-z0-9\s]+$/;
+    if (!formData.enterpriseDescription.trim()) {
+      tempErrors.enterpriseDescription = "Enterprise Description is required";
+    } else if (
+      !descriptionPattern.test(formData.enterpriseDescription.trim())
+    ) {
+      tempErrors.enterpriseDescription =
+        "Enterprise Description should be alphanumeric";
+    }
+
+    // Password validation (at least 8 characters)
+    if (!formData.enterprisePassword.trim()) {
+      tempErrors.enterprisePassword = "Enterprise Password is required";
+    } else if (formData.enterprisePassword.length < 8) {
+      tempErrors.enterprisePassword =
+        "Password must be at least 8 characters long";
+    }
+
+    // Number of Stores validation (numeric and > 0)
+    if (formData.numberOfStores === "") {
       tempErrors.numberOfStores = "Number of Stores is required";
-    else if (
+    } else if (
       isNaN(formData.numberOfStores) ||
       parseInt(formData.numberOfStores, 10) <= 0
-    )
-      tempErrors.numberOfStores = "Enter a valid number of stores";
+    ) {
+      tempErrors.numberOfStores =
+        "Enter a valid number of stores greater than 0";
+    }
 
-    // Store Details
+    // Store Details validation
     if (formData.storeDetails.length > 0) {
       formData.storeDetails.forEach((store, index) => {
         if (
@@ -249,7 +275,7 @@ export default function Register() {
                 <TextField
                   label="Enterprise Password"
                   variant="outlined"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="enterprisePassword"
                   value={formData.enterprisePassword}
                   onChange={handleChange}
@@ -258,6 +284,18 @@ export default function Register() {
                   fullWidth
                   sx={{ backgroundColor: "#fff" }}
                   required
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -271,16 +309,14 @@ export default function Register() {
                   helperText={errors.enterpriseDescription}
                   fullWidth
                   sx={{ backgroundColor: "#fff" }}
-                  multiline
-                  rows={3}
                   required
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+
+              <Grid item xs={12}>
                 <TextField
                   label="Number of Stores"
                   variant="outlined"
-                  type="number"
                   name="numberOfStores"
                   value={formData.numberOfStores}
                   onChange={handleChange}
@@ -288,52 +324,35 @@ export default function Register() {
                   helperText={errors.numberOfStores}
                   fullWidth
                   sx={{ backgroundColor: "#fff" }}
-                  InputProps={{ inputProps: { min: 1 } }}
                   required
                 />
               </Grid>
             </Grid>
 
-            {/* Store Details Table */}
-            {formData.storeDetails.length > 0 && (
+            {/* Store Details */}
+            {formData.numberOfStores > 0 && (
               <>
-                <Typography variant="h6" sx={{ mt: 2 }}>
+                <Typography variant="h6" sx={{ mt: 4 }}>
                   Store Details
                 </Typography>
-                <TableContainer component={Paper}>
+
+                <TableContainer component={Paper} sx={{ mt: 2 }}>
                   <Table>
                     <TableHead>
                       <TableRow>
                         <TableCell>Store Number</TableCell>
-                        <TableCell>Inventory Counters</TableCell>
                         <TableCell>Billing Counters</TableCell>
+                        <TableCell>Inventory Counters</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {formData.storeDetails.map((store, index) => (
                         <TableRow key={index}>
-                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>Store {index + 1}</TableCell>
                           <TableCell>
                             <TextField
-                              type="number"
                               variant="outlined"
-                              value={store.inventoryCounters}
-                              onChange={(e) =>
-                                handleStoreChange(
-                                  index,
-                                  "inventoryCounters",
-                                  e.target.value
-                                )
-                              }
-                              error={!!errors[`inventoryCounters_${index}`]}
-                              helperText={errors[`inventoryCounters_${index}`]}
-                              InputProps={{ inputProps: { min: 0 } }}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <TextField
-                              type="number"
-                              variant="outlined"
+                              name={`billingCounters_${index}`}
                               value={store.billingCounters}
                               onChange={(e) =>
                                 handleStoreChange(
@@ -344,7 +363,26 @@ export default function Register() {
                               }
                               error={!!errors[`billingCounters_${index}`]}
                               helperText={errors[`billingCounters_${index}`]}
-                              InputProps={{ inputProps: { min: 0 } }}
+                              sx={{ backgroundColor: "#fff" }}
+                              required
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <TextField
+                              variant="outlined"
+                              name={`inventoryCounters_${index}`}
+                              value={store.inventoryCounters}
+                              onChange={(e) =>
+                                handleStoreChange(
+                                  index,
+                                  "inventoryCounters",
+                                  e.target.value
+                                )
+                              }
+                              error={!!errors[`inventoryCounters_${index}`]}
+                              helperText={errors[`inventoryCounters_${index}`]}
+                              sx={{ backgroundColor: "#fff" }}
+                              required
                             />
                           </TableCell>
                         </TableRow>
@@ -355,15 +393,17 @@ export default function Register() {
               </>
             )}
 
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={loading}
-              sx={{ mt: 3 }}
-            >
-              {loading ? <CircularProgress size={24} /> : "Register Enterprise"}
-            </Button>
+            {/* Submit button */}
+            <Box display="flex" justifyContent="center" mt={4}>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={24} /> : "Register"}
+              </Button>
+            </Box>
           </Box>
         </form>
       </Box>
