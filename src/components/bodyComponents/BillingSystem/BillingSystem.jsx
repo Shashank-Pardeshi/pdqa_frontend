@@ -23,20 +23,43 @@ export default function BillingSystem() {
   const [quantity, setQuantity] = useState(1);
   const [products, setProducts] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [errorMessage, setErrorMessage] = useState(""); // State for error message
+  const [quantityError, setQuantityError] = useState(""); // State for quantity error
 
-  // Fetch product details by product ID
+  // Fetch product details by product ID and validate against store and enterprise ID
   const handleAddProduct = async () => {
+    const enterpriseId = localStorage.getItem("enterpriseId"); // Retrieve enterprise ID from local storage
+    if (!enterpriseId) {
+      alert("Enterprise ID not found in local storage.");
+      return;
+    }
+
     try {
+      // Check if the product exists in the specified store and enterprise
       const response = await axios.get(
-        `/api/gateway/inventory/getProduct?productID=${productId}`
+        `/api/gateway/inventory/getInventory?productId=${productId}&enterpriseId=${enterpriseId}&storeId=${storeId}`
       );
 
       const product = response.data;
 
-      // Calculate product total price including GST
-      const productTotalPrice =
-        (product.selling_price + (product.selling_price * product.gst) / 100) *
-        quantity;
+      // If product is not found, handle error
+      if (!product) {
+        setErrorMessage("Product not found in this store."); // Set error message
+        return;
+      }
+
+      // Check if the entered quantity is greater than available stock
+      if (quantity > product.quantity) {
+        setQuantityError(
+          `Quantity exceeds available stock (${product.quantity}).`
+        );
+        return;
+      } else {
+        setQuantityError(""); // Clear quantity error if valid
+      }
+
+      // Calculate product total price based solely on selling price
+      const productTotalPrice = product.sellprice * quantity;
 
       // Add the product to the products array
       const newProduct = {
@@ -49,9 +72,10 @@ export default function BillingSystem() {
       setTotalAmount((prevTotal) => prevTotal + productTotalPrice);
       setProductId(""); // Clear the product ID field
       setQuantity(1); // Reset quantity
+      setErrorMessage(""); // Clear error message
     } catch (err) {
       console.error("Error fetching product details:", err);
-      alert("Product not found.");
+      setErrorMessage("Error fetching product details."); // Set error message
     }
   };
 
@@ -172,6 +196,18 @@ export default function BillingSystem() {
           </Button>
         </Box>
 
+        {/* Error Messages */}
+        {errorMessage && (
+          <Typography color="error" align="center">
+            {errorMessage}
+          </Typography>
+        )}
+        {quantityError && (
+          <Typography color="error" align="center">
+            {quantityError}
+          </Typography>
+        )}
+
         {/* Product List Table */}
         {products.length > 0 && (
           <TableContainer
@@ -196,9 +232,6 @@ export default function BillingSystem() {
                     <strong>Selling Price</strong>
                   </TableCell>
                   <TableCell align="center">
-                    <strong>GST (%)</strong>
-                  </TableCell>
-                  <TableCell align="center">
                     <strong>Quantity</strong>
                   </TableCell>
                   <TableCell align="center">
@@ -211,10 +244,7 @@ export default function BillingSystem() {
                   <TableRow key={index}>
                     <TableCell align="center">{product.name}</TableCell>
                     <TableCell align="center">{product.category}</TableCell>
-                    <TableCell align="center">
-                      {product.selling_price}
-                    </TableCell>
-                    <TableCell align="center">{product.gst}</TableCell>
+                    <TableCell align="center">{product.sellprice}</TableCell>
                     <TableCell align="center">{product.quantity}</TableCell>
                     <TableCell align="center">
                       {product.total_price.toFixed(2)}

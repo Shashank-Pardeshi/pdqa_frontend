@@ -128,13 +128,16 @@ export default function Register() {
           ]),
         };
 
-        const response = await fetch("/api/gateway/signup", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
+        const response = await fetch(
+          "http://localhost:8080/api/gateway/signup",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
 
         if (!response.ok) {
           // Handle HTTP errors
@@ -143,15 +146,12 @@ export default function Register() {
         }
 
         const data = await response.json();
-        setEnterpriseId(data.enterpriseId); // Store the returned enterprise ID
+        setEnterpriseId(data.entId); // Store the returned enterprise ID
 
         // Save the relevant data to local storage
-        localStorage.setItem("enterpriseId", data.enterpriseId);
-        localStorage.setItem("enterpriseName", formData.enterpriseName);
-        localStorage.setItem(
-          "enterpriseDescription",
-          formData.enterpriseDescription
-        );
+        localStorage.setItem("enterpriseId", data.entId);
+        // localStorage.setItem("enterpriseName", formData.enterpriseName);
+        localStorage.setItem("enterpriseDescription", data.listOfStoreDetails);
 
         setSuccessMessage(
           `Registration successful! Your Enterprise ID is: ${data.enterpriseId}`

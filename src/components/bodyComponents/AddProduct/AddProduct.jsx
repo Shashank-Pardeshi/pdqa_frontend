@@ -40,11 +40,21 @@ const AddProduct = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    // Get enterpriseId from localStorage
+    const enterpriseId = localStorage.getItem("enterpriseId");
+
+    if (!enterpriseId) {
+      setError("Enterprise ID not found. Please log in again.");
+      return;
+    }
+
     if (validateForm()) {
       const productData = {
         productName,
         productDescription,
         category,
+        enterpriseId, // Add enterpriseId here
       };
 
       try {
@@ -54,9 +64,14 @@ const AddProduct = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            productName: productData.productName,
-            productCategory: productData.category,
-            description: productData.productDescription,
+            productDetails: [
+              {
+                productName: productData.productName,
+                productCategory: productData.category,
+                description: productData.productDescription,
+              },
+            ],
+            enterpriseId: productData.enterpriseId, // Include enterpriseId here
           }),
         });
 

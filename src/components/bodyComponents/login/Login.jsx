@@ -52,13 +52,21 @@ export default function Login() {
       const data = await response.json();
       setSuccessMessage(data.message || "Login successful!");
 
+      setEnterpriseId(data.entId); // Store the returned enterprise ID
+
+      // Save the relevant data to local storage
+      localStorage.setItem("enterpriseId", data.enterpriseId);
+      // localStorage.setItem("enterpriseName", formData.enterpriseName);
+      localStorage.setItem("enterpriseDescription", data.listOfStoreDetails);
+
       // Handle Authentication Token
       if (data.token) {
         localStorage.setItem("authToken", data.token);
       }
 
       // Redirect to Dashboard or Protected Route
-      navigate("/dashboard");
+
+      navigate("/home");
     } catch (error) {
       setErrorMessage(error.message);
     } finally {

@@ -26,37 +26,45 @@ import * as XLSX from "xlsx";
 import axios from "axios";
 
 export default function UpdateInventory() {
+  const [enterpriseId, setEnterpriseId] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [inventoryId, setInventoryId] = useState("");
+  const [counterId, setCounterId] = useState("");
   const [uploadOption, setUploadOption] = useState(""); // Either 'file' or 'manual'
   const [file, setFile] = useState(null);
   const [data, setData] = useState([]);
   const [csvErrors, setCsvErrors] = useState([]); // To track errors in CSV data
   const [newProduct, setNewProduct] = useState({
-    name: "",
-    category: "",
-    selling_price: "",
-    quantity: "",
-    description: "",
-    gst: "",
+    productId: "",
+    costPrice: "",
+    sellingPrice: "",
+    numberOfUnits: "",
   });
   const [sampleCSVOpen, setSampleCSVOpen] = useState(false); // Track dialog state
   const [errors, setErrors] = useState({});
 
-  const validCategories = ["Electronics", "Furniture", "Clothing", "Food"];
+  // Handle store, enterprise, and counter selection
+  const handleEnterpriseChange = (e) => {
+    setEnterpriseId(e.target.value);
+  };
 
-  // Handle store selection and inventory ID selection
   const handleStoreChange = (e) => {
     setStoreId(e.target.value);
   };
 
-  const handleInventoryChange = (e) => {
-    setInventoryId(e.target.value);
+  const handleCounterChange = (e) => {
+    setCounterId(e.target.value);
   };
 
-  // Handle file upload and parse the excel file with validation
+  // Handle file upload and parse the CSV file with validation
   const handleFileUpload = (e) => {
     const uploadedFile = e.target.files[0];
+
+    if (!uploadedFile.name.endsWith(".csv")) {
+      alert("Please upload a valid CSV file.");
+      setFile(null);
+      return;
+    }
+
     setFile(uploadedFile);
 
     const reader = new FileReader();
@@ -74,432 +82,276 @@ export default function UpdateInventory() {
     reader.readAsBinaryString(uploadedFile);
   };
 
-  // Validate CSV data based on the same validation rules as manual input
+  // Validate CSV data
   const validateCSVData = (csvData) => {
-    const nameRegex = /^[A-Za-z\s]+$/;
-    const alphanumericRegex = /^[a-zA-Z0-9\s]+$/;
     const newErrors = [];
     const validData = csvData.map((row, index) => {
       const errorsForRow = {};
 
-      if (!nameRegex.test(row.name)) {
-        errorsForRow.name = "Product name should contain only letters.";
+      if (!row.productId) {
+        errorsForRow.productId = "Product ID is required.";
+      }
+      if (!Number.isInteger(row.costPrice)) {
+        errorsForRow.costPrice = "Cost price must be an integer.";
+      }
+      if (!Number.isInteger(row.sellingPrice)) {
+        errorsForRow.sellingPrice = "Selling price must be an integer.";
+      }
+      if (!Number.isInteger(row.numberOfUnits)) {
+        errorsForRow.numberOfUnits = "Number of units must be an integer.";
       }
 
-      if (!validCategories.includes(row.category)) {
-        errorsForRow.category =
-          "Invalid category. Must be one of: " + validCategories.join(", ");
+      if (!row.enterpriseId) {
+        errorsForRow.enterpriseId = "Enterprise ID is required.";
       }
-
-      if (!alphanumericRegex.test(row.description)) {
-        errorsForRow.description = "Description should be alphanumeric.";
+      if (!row.storeId) {
+        errorsForRow.storeId = "Store ID is required.";
+      }
+      if (!row.counterId) {
+        errorsForRow.counterId = "Counter ID is required.";
       }
 
       if (Object.keys(errorsForRow).length > 0) {
-        newErrors.push({ rowIndex: index + 1, ...errorsForRow });
+        newErrors.push({ row: index + 1, errors: errorsForRow });
       }
 
-      return row; // Return row to keep the data intact
+      return row;
     });
 
     return { validData, errors: newErrors };
   };
 
-  // Handle option selection for adding inventory
-  const handleUploadOptionChange = (e) => {
-    setUploadOption(e.target.value);
+  // Handle manual product input
+  const handleManualInputChange = (e) => {
+    setNewProduct({
+      ...newProduct,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  // Handle updating a specific field of a row in the table
-  const handleFieldChange = (index, field, value) => {
-    const updatedData = [...data];
-    updatedData[index][field] = value;
-    setData(updatedData);
-  };
+  const handleManualSubmit = () => {
+    const { productId, costPrice, sellingPrice, numberOfUnits } = newProduct;
+    const validationErrors = {};
 
-  // Handle submitting updated data to the backend
-  const handleSubmit = async () => {
-    if (!storeId || !inventoryId) {
-      alert("Please select Store ID and Inventory ID.");
-      return;
+    // Validate the enterprise, store, and counter IDs
+    if (!enterpriseId) {
+      validationErrors.enterpriseId = "Enterprise ID is required.";
+    }
+    if (!storeId) {
+      validationErrors.storeId = "Store ID is required.";
+    }
+    if (!counterId) {
+      validationErrors.counterId = "Counter ID is required.";
     }
 
-    if (csvErrors.length > 0) {
-      alert("Please fix the CSV errors before submitting.");
-      return;
+    // Validate product fields
+    if (!productId) {
+      validationErrors.productId = "Product ID is required.";
+    }
+    if (!costPrice || isNaN(costPrice)) {
+      validationErrors.costPrice = "Cost price must be a number.";
+    }
+    if (!sellingPrice || isNaN(sellingPrice)) {
+      validationErrors.sellingPrice = "Selling price must be a number.";
+    }
+    if (!numberOfUnits || isNaN(numberOfUnits)) {
+      validationErrors.numberOfUnits = "Number of units must be a number.";
     }
 
-    try {
-      await axios.post("/api/inventory/update", { data, storeId, inventoryId }); // Sends data to the backend
-      alert("Products have been updated successfully.");
-    } catch (err) {
-      console.error("Error updating inventory:", err);
-      alert("There was an error updating the inventory.");
-    }
-  };
-
-  // Validation for the new product form fields
-  const validateForm = () => {
-    const newErrors = {};
-    const nameRegex = /^[A-Za-z\s]+$/;
-    const alphanumericRegex = /^[a-zA-Z0-9\s]+$/;
-
-    if (!nameRegex.test(newProduct.name)) {
-      newErrors.name = "Product name should contain only letters.";
-    }
-
-    if (!validCategories.includes(newProduct.category)) {
-      newErrors.category = "Please select a valid category.";
-    }
-
-    if (!alphanumericRegex.test(newProduct.description)) {
-      newErrors.description = "Description should be alphanumeric.";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Check if any errors exist
-  };
-
-  // Handle form field change for adding a new product
-  const handleNewProductChange = (e) => {
-    const { name, value } = e.target;
-    setNewProduct({ ...newProduct, [name]: value });
-  };
-
-  // Add new product to the data
-  const handleAddProduct = () => {
-    if (!storeId || !inventoryId) {
-      alert("Please select Store ID and Inventory ID before adding a product.");
-      return;
-    }
-
-    if (validateForm()) {
-      setData([...data, newProduct]);
-      setNewProduct({
-        name: "",
-        category: "",
-        selling_price: "",
-        quantity: "",
-        description: "",
-        gst: "",
-      });
-      setErrors({});
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
     } else {
-      alert("Please correct the errors before adding the product.");
+      // Post the data to the backend
+      const postData = {
+        productId,
+        costPrice: parseInt(costPrice),
+        sellingPrice: parseInt(sellingPrice),
+        enterpriseId,
+        storeId,
+        counterId,
+        numberOfUnits: parseInt(numberOfUnits),
+      };
+
+      axios
+        .post("/api/inventory/update", postData)
+        .then((response) => {
+          console.log("Inventory updated successfully", response.data);
+        })
+        .catch((error) => {
+          console.error("Error updating inventory", error);
+        });
     }
-  };
-
-  // Handle opening sample CSV dialog
-  const handleSampleCSVOpen = () => {
-    setSampleCSVOpen(true);
-  };
-
-  // Handle closing sample CSV dialog
-  const handleSampleCSVClose = () => {
-    setSampleCSVOpen(false);
   };
 
   return (
-    <Container maxWidth="md">
-      <Paper
-        elevation={3}
-        sx={{
-          p: 4,
-          mt: 4,
-          borderRadius: 3,
-          backgroundColor: "#f9f9f9",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-        }}
-      >
-        <Typography
-          variant="h4"
-          gutterBottom
-          align="center"
-          color="primary"
-          sx={{ mb: 4 }}
+    <Container>
+      <Typography variant="h4" gutterBottom>
+        Update Inventory
+      </Typography>
+
+      {/* Store, Enterprise, and Counter Selection */}
+      <Grid container spacing={2} sx={{ marginBottom: 2 }}>
+        <Grid item xs={4}>
+          <TextField
+            label="Enterprise ID"
+            value={enterpriseId}
+            onChange={handleEnterpriseChange}
+            fullWidth
+            error={!!errors.enterpriseId}
+            helperText={errors.enterpriseId}
+          />
+        </Grid>
+        <Grid item xs={4}>
+          <TextField
+            label="Store ID"
+            value={storeId}
+            onChange={handleStoreChange}
+            fullWidth
+            error={!!errors.storeId}
+            helperText={errors.storeId}
+          />
+        </Grid>
+        <Grid item xs={4}>
+          <TextField
+            label="Counter ID"
+            value={counterId}
+            onChange={handleCounterChange}
+            fullWidth
+            error={!!errors.counterId}
+            helperText={errors.counterId}
+          />
+        </Grid>
+      </Grid>
+
+      {/* Upload option selector */}
+      <FormControl fullWidth>
+        <InputLabel id="upload-option-label">Upload Option</InputLabel>
+        <Select
+          labelId="upload-option-label"
+          value={uploadOption}
+          onChange={(e) => setUploadOption(e.target.value)}
         >
-          Update Inventory
-        </Typography>
+          <MenuItem value="file">Upload CSV File</MenuItem>
+          <MenuItem value="manual">Manual Input</MenuItem>
+        </Select>
+      </FormControl>
 
-        {/* Store ID and Inventory ID selection */}
-        <Box display="flex" gap={2} mb={3}>
-          <FormControl fullWidth>
-            <InputLabel>Store ID</InputLabel>
-            <Select value={storeId} onChange={handleStoreChange}>
-              <MenuItem value="store1">Store 1</MenuItem>
-              <MenuItem value="store2">Store 2</MenuItem>
-              <MenuItem value="store3">Store 3</MenuItem>
-            </Select>
-          </FormControl>
+      {/* CSV File Upload */}
+      {uploadOption === "file" && (
+        <Box sx={{ marginTop: 2 }}>
+          <Button variant="contained" component="label">
+            Upload CSV File
+            <input
+              type="file"
+              accept=".csv"
+              hidden
+              onChange={handleFileUpload}
+            />
+          </Button>
 
-          <FormControl fullWidth>
-            <InputLabel>Inventory ID</InputLabel>
-            <Select value={inventoryId} onChange={handleInventoryChange}>
-              <MenuItem value="inventory1">Inventory 1</MenuItem>
-              <MenuItem value="inventory2">Inventory 2</MenuItem>
-              <MenuItem value="inventory3">Inventory 3</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-
-        {/* Option to upload XLSX file or add individual products */}
-        <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel>Select Method</InputLabel>
-          <Select value={uploadOption} onChange={handleUploadOptionChange}>
-            <MenuItem value="file">Upload XLSX File</MenuItem>
-            <MenuItem value="manual">Add Product Manually</MenuItem>
-          </Select>
-        </FormControl>
-
-        {/* Show the XLSX upload section if file option is selected */}
-        {uploadOption === "file" && (
-          <>
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={handleSampleCSVOpen}
-            >
-              View Sample CSV
-            </Button>
-
-            {/* Sample CSV Dialog */}
-            <Dialog open={sampleCSVOpen} onClose={handleSampleCSVClose}>
-              <DialogTitle>Sample CSV Format</DialogTitle>
-              <DialogContent>
-                <pre>
-                  {`Name, Category, Selling Price, Quantity, Description, GST
-Example Product 1, Electronics, 1000, 10, "A description of product 1", 18`}
-                </pre>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleSampleCSVClose} color="primary">
-                  Close
-                </Button>
-              </DialogActions>
-            </Dialog>
-
-            <Button
-              variant="contained"
-              component="label"
-              color="primary"
-              sx={{ mt: 2, mb: 2 }}
-            >
-              Upload File
-              <input
-                type="file"
-                hidden
-                accept=".xlsx, .xls"
-                onChange={handleFileUpload}
-              />
-            </Button>
-
-            {/* Display CSV Errors if any */}
-            {csvErrors.length > 0 && (
-              <Paper
-                elevation={2}
-                sx={{ p: 2, mt: 2, backgroundColor: "#ffe6e6" }}
-              >
-                <Typography variant="h6" color="error" gutterBottom>
-                  CSV Errors:
+          {/* Display CSV errors if any */}
+          {csvErrors.length > 0 && (
+            <Box sx={{ marginTop: 2 }}>
+              <Typography variant="h6">CSV Errors:</Typography>
+              {csvErrors.map((error, index) => (
+                <Typography key={index}>
+                  Row {error.row}: {JSON.stringify(error.errors)}
                 </Typography>
-                <ul>
-                  {csvErrors.map((error, idx) => (
-                    <li key={idx}>
-                      Row {error.rowIndex}: {Object.values(error).join(", ")}
-                    </li>
-                  ))}
-                </ul>
-              </Paper>
-            )}
-
-            {/* Display the uploaded data */}
-            {data.length > 0 && (
-              <TableContainer component={Paper} sx={{ mt: 3 }}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Category</TableCell>
-                      <TableCell>Selling Price</TableCell>
-                      <TableCell>Quantity</TableCell>
-                      <TableCell>Description</TableCell>
-                      <TableCell>GST</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {data.map((row, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <TextField
-                            value={row.name || ""}
-                            onChange={(e) =>
-                              handleFieldChange(index, "name", e.target.value)
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            value={row.category || ""}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                index,
-                                "category",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            value={row.selling_price || ""}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                index,
-                                "selling_price",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            value={row.quantity || ""}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                index,
-                                "quantity",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            value={row.description || ""}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                index,
-                                "description",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            value={row.gst || ""}
-                            onChange={(e) =>
-                              handleFieldChange(index, "gst", e.target.value)
-                            }
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-          </>
-        )}
-
-        {/* Show form to manually add product if manual option is selected */}
-        {uploadOption === "manual" && (
-          <Box component={Paper} p={2} mb={3}>
-            <Typography variant="h6" gutterBottom>
-              Add New Product
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Product Name"
-                  name="name"
-                  fullWidth
-                  value={newProduct.name}
-                  onChange={handleNewProductChange}
-                  error={!!errors.name}
-                  helperText={errors.name}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    name="category"
-                    value={newProduct.category}
-                    onChange={handleNewProductChange}
-                    error={!!errors.category}
-                  >
-                    {validCategories.map((category, idx) => (
-                      <MenuItem key={idx} value={category}>
-                        {category}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Selling Price"
-                  name="selling_price"
-                  fullWidth
-                  value={newProduct.selling_price}
-                  onChange={handleNewProductChange}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Quantity"
-                  name="quantity"
-                  fullWidth
-                  value={newProduct.quantity}
-                  onChange={handleNewProductChange}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Description"
-                  name="description"
-                  fullWidth
-                  value={newProduct.description}
-                  onChange={handleNewProductChange}
-                  error={!!errors.description}
-                  helperText={errors.description}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="GST (%)"
-                  name="gst"
-                  fullWidth
-                  value={newProduct.gst}
-                  onChange={handleNewProductChange}
-                />
-              </Grid>
-            </Grid>
-            <Box display="flex" justifyContent="center" mt={2}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleAddProduct}
-              >
-                Add Product
-              </Button>
+              ))}
             </Box>
-          </Box>
-        )}
-
-        {/* Submit Button */}
-        <Box display="flex" justifyContent="center">
+          )}
           <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            sx={{ mt: 2 }}
+            variant="outlined"
+            onClick={() => setSampleCSVOpen(true)}
+            sx={{ marginTop: 2 }}
           >
-            Submit
+            View Sample CSV Format
           </Button>
         </Box>
-      </Paper>
+      )}
+
+      {/* Manual Product Input */}
+      {uploadOption === "manual" && (
+        <Grid container spacing={2} sx={{ marginTop: 2 }}>
+          <Grid item xs={6}>
+            <TextField
+              label="Product ID"
+              name="productId"
+              value={newProduct.productId}
+              onChange={handleManualInputChange}
+              fullWidth
+              error={!!errors.productId}
+              helperText={errors.productId}
+            />
+          </Grid>
+          <Grid item xs={3}>
+            <TextField
+              label="Cost Price"
+              name="costPrice"
+              value={newProduct.costPrice}
+              onChange={handleManualInputChange}
+              fullWidth
+              error={!!errors.costPrice}
+              helperText={errors.costPrice}
+            />
+          </Grid>
+          <Grid item xs={3}>
+            <TextField
+              label="Selling Price"
+              name="sellingPrice"
+              value={newProduct.sellingPrice}
+              onChange={handleManualInputChange}
+              fullWidth
+              error={!!errors.sellingPrice}
+              helperText={errors.sellingPrice}
+            />
+          </Grid>
+          <Grid item xs={3}>
+            <TextField
+              label="Number of Units"
+              name="numberOfUnits"
+              value={newProduct.numberOfUnits}
+              onChange={handleManualInputChange}
+              fullWidth
+              error={!!errors.numberOfUnits}
+              helperText={errors.numberOfUnits}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleManualSubmit}
+            >
+              Submit
+            </Button>
+          </Grid>
+        </Grid>
+      )}
+
+      {/* Dialog for Sample CSV */}
+      <Dialog
+        open={sampleCSVOpen}
+        onClose={() => setSampleCSVOpen(false)}
+        maxWidth="md"
+      >
+        <DialogTitle>Sample CSV Format</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Please use the following format for your CSV file:
+          </Typography>
+          <Typography>
+            <strong>
+              productId, costPrice, sellingPrice, enterpriseId, storeId,
+              counterId, numberOfUnits
+            </strong>
+          </Typography>
+          <Typography>Example: 123, 20, 25, 1, 1, 1, 100</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSampleCSVOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

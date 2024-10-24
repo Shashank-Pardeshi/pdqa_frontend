@@ -22,7 +22,9 @@ export default function ViewInventory() {
   // Fetch inventory data from the backend
   const fetchInventory = async () => {
     try {
-      const response = await axios.get("/api/gateway/inventory/getInventory");
+      const response = await axios.get(
+        "http://localhost:8080/api/gateway/inventory/getInventory"
+      );
       setInventory(response.data);
       setLoading(false);
     } catch (err) {
