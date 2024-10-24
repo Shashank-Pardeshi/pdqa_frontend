@@ -130,8 +130,8 @@ export default function Login() {
             <TextField
               label="Enterprise ID"
               variant="outlined"
-              name="entId"
-              value={formData.entId}
+              name="enterpriseLoginId"
+              value={formData.enterpriseLoginId}
               onChange={handleChange}
               fullWidth
               sx={{ backgroundColor: "#fff" }}
