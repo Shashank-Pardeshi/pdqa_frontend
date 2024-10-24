@@ -8,13 +8,6 @@ import {
   CircularProgress,
   Alert,
   Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   IconButton,
   InputAdornment,
 } from "@mui/material";
@@ -33,7 +26,6 @@ export default function Register() {
   const [loading, setLoading] = useState(false); // Loading state
   const [successMessage, setSuccessMessage] = useState(""); // Success feedback
   const [errorMessage, setErrorMessage] = useState(""); // Error feedback
-  const [enterpriseId, setEnterpriseId] = useState(null); // Store the unique enterprise ID
   const [showPassword, setShowPassword] = useState(false); // Toggle password visibility
 
   const navigate = useNavigate(); // Initialize navigate
@@ -112,19 +104,17 @@ export default function Register() {
     e.preventDefault();
     setSuccessMessage("");
     setErrorMessage("");
-    setEnterpriseId(null); // Reset enterpriseId on new submission
 
     if (validate()) {
       setLoading(true);
       try {
         // Prepare the payload
-
         const payload = {
           enterpriseName: formData.enterpriseName,
           password: formData.enterprisePassword,
           listOfStoreDetails: formData.storeDetails.map((store) => [
-            parseInt(store.billingCounters, 10), // First element for billing counters
-            parseInt(store.inventoryCounters, 10), // Second element for inventory counters
+            parseInt(store.billingCounters, 10),
+            parseInt(store.inventoryCounters, 10),
           ]),
         };
 
@@ -146,15 +136,21 @@ export default function Register() {
         }
 
         const data = await response.json();
-        setEnterpriseId(data.entId); // Store the returned enterprise ID
+        console.log(data);
 
         // Save the relevant data to local storage
         localStorage.setItem("enterpriseId", data.entId);
-        // localStorage.setItem("enterpriseName", formData.enterpriseName);
-        localStorage.setItem("enterpriseDescription", data.listOfStoreDetails);
+        localStorage.setItem(
+          "enterpriseDescription",
+          data.enterpriseDescription
+        );
+        localStorage.setItem(
+          "listOfStoreDetails",
+          JSON.stringify(data.listOfStoreDetails)
+        );
 
         setSuccessMessage(
-          `Registration successful! Your Enterprise ID is: ${data.enterpriseId}`
+          `Registration successful! Your Enterprise ID is: ${data.entId}`
         );
 
         // Reset form
@@ -304,117 +300,81 @@ export default function Register() {
                 />
               </Grid>
             </Grid>
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Enterprise Description"
-                  variant="outlined"
-                  name="enterpriseDescription"
-                  value={formData.enterpriseDescription}
-                  onChange={handleChange}
-                  error={!!errors.enterpriseDescription}
-                  helperText={errors.enterpriseDescription}
-                  fullWidth
-                  sx={{ backgroundColor: "#fff" }}
-                  required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Number of Stores"
-                  variant="outlined"
-                  name="numberOfStores"
-                  value={formData.numberOfStores}
-                  onChange={handleChange}
-                  error={!!errors.numberOfStores}
-                  helperText={errors.numberOfStores}
-                  fullWidth
-                  sx={{ backgroundColor: "#fff" }}
-                  required
-                />
-              </Grid>
-            </Grid>
+            <TextField
+              label="Enterprise Description"
+              variant="outlined"
+              name="enterpriseDescription"
+              value={formData.enterpriseDescription}
+              onChange={handleChange}
+              error={!!errors.enterpriseDescription}
+              helperText={errors.enterpriseDescription}
+              fullWidth
+              sx={{ backgroundColor: "#fff" }}
+              required
+            />
+            <TextField
+              label="Number of Stores"
+              variant="outlined"
+              type="number"
+              name="numberOfStores"
+              value={formData.numberOfStores}
+              onChange={handleChange}
+              error={!!errors.numberOfStores}
+              helperText={errors.numberOfStores}
+              fullWidth
+              sx={{ backgroundColor: "#fff" }}
+              required
+            />
 
             {/* Store Details */}
-            {formData.storeDetails.length > 0 && (
-              <>
-                <Typography variant="h6" sx={{ mt: 2 }}>
-                  Store Details
-                </Typography>
-                <TableContainer component={Paper}>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell align="center">Store Number</TableCell>
-                        <TableCell align="center">Billing Counters</TableCell>
-                        <TableCell align="center">Inventory Counters</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {formData.storeDetails.map((store, index) => (
-                        <TableRow key={index}>
-                          <TableCell align="center">
-                            Store {index + 1}
-                          </TableCell>
-                          <TableCell align="center">
-                            <TextField
-                              type="number"
-                              name={`billingCounters_${index}`}
-                              value={store.billingCounters}
-                              onChange={(e) =>
-                                handleStoreChange(
-                                  index,
-                                  "billingCounters",
-                                  e.target.value
-                                )
-                              }
-                              error={!!errors[`billingCounters_${index}`]}
-                              helperText={errors[`billingCounters_${index}`]}
-                              fullWidth
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <TextField
-                              type="number"
-                              name={`inventoryCounters_${index}`}
-                              value={store.inventoryCounters}
-                              onChange={(e) =>
-                                handleStoreChange(
-                                  index,
-                                  "inventoryCounters",
-                                  e.target.value
-                                )
-                              }
-                              error={!!errors[`inventoryCounters_${index}`]}
-                              helperText={errors[`inventoryCounters_${index}`]}
-                              fullWidth
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </>
-            )}
+            <Typography variant="h6">Store Details</Typography>
+            {formData.storeDetails.map((store, index) => (
+              <Box key={index} display="flex" gap="20px" sx={{ mb: 2 }}>
+                <TextField
+                  label="Billing Counters"
+                  variant="outlined"
+                  type="number"
+                  value={store.billingCounters}
+                  onChange={(e) =>
+                    handleStoreChange(index, "billingCounters", e.target.value)
+                  }
+                  error={!!errors[`billingCounters_${index}`]}
+                  helperText={errors[`billingCounters_${index}`]}
+                  fullWidth
+                  sx={{ backgroundColor: "#fff" }}
+                  required
+                />
+                <TextField
+                  label="Inventory Counters"
+                  variant="outlined"
+                  type="number"
+                  value={store.inventoryCounters}
+                  onChange={(e) =>
+                    handleStoreChange(
+                      index,
+                      "inventoryCounters",
+                      e.target.value
+                    )
+                  }
+                  error={!!errors[`inventoryCounters_${index}`]}
+                  helperText={errors[`inventoryCounters_${index}`]}
+                  fullWidth
+                  sx={{ backgroundColor: "#fff" }}
+                  required
+                />
+              </Box>
+            ))}
 
-            {/* Submit button */}
-            <Box display="flex" justifyContent="center">
-              <Button
-                variant="contained"
-                type="submit"
-                sx={{ mt: 3, backgroundColor: "#1976D2", color: "#fff" }}
-                disabled={loading}
-                fullWidth
-              >
-                {loading ? (
-                  <CircularProgress size={24} sx={{ color: "#fff" }} />
-                ) : (
-                  "Register"
-                )}
-              </Button>
-            </Box>
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={loading}
+              sx={{ mt: 3 }}
+            >
+              {loading ? <CircularProgress size={24} /> : "Register"}
+            </Button>
           </Box>
         </form>
       </Box>

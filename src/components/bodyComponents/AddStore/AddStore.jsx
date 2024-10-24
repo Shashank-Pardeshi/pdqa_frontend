@@ -51,7 +51,10 @@ export default function AddStore() {
       setSuccessMessage(null);
 
       // Make POST request to the API to add a new store
-      const response = await axios.post("/api/store/addstore", newStore);
+      const response = await axios.post(
+        "http://localhost:8080/api/gateway/store/addstore",
+        newStore
+      );
 
       // On success, update the store list with the new store
       setStoreList([...storeList, newStore]);

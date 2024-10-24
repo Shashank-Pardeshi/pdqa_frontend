@@ -58,22 +58,25 @@ const AddProduct = () => {
       };
 
       try {
-        const response = await fetch("/api/gateway/inventory/addProduct", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            productDetails: [
-              {
-                productName: productData.productName,
-                productCategory: productData.category,
-                description: productData.productDescription,
-              },
-            ],
-            enterpriseId: productData.enterpriseId, // Include enterpriseId here
-          }),
-        });
+        const response = await fetch(
+          "http://localhost:8080/api/gateway/inventory/addProduct",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              productDetails: [
+                {
+                  productName: productData.productName,
+                  productCategory: productData.category,
+                  description: productData.productDescription,
+                },
+              ],
+              enterpriseId: productData.enterpriseId, // Include enterpriseId here
+            }),
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to add product.");

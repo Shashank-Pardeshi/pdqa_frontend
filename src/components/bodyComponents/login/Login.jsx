@@ -15,7 +15,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function Login() {
   const [formData, setFormData] = useState({
-    entId: "",
+    enterpriseLoginId: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
@@ -33,16 +33,13 @@ export default function Login() {
     // Only perform backend validation
     setLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/gateway/entLogin`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch(`http://localhost:8080/api/gateway/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -50,14 +47,15 @@ export default function Login() {
       }
 
       const data = await response.json();
-      setSuccessMessage(data.message || "Login successful!");
-
-      setEnterpriseId(data.entId); // Store the returned enterprise ID
+      console.log(data);
 
       // Save the relevant data to local storage
-      localStorage.setItem("enterpriseId", data.enterpriseId);
-      // localStorage.setItem("enterpriseName", formData.enterpriseName);
-      localStorage.setItem("enterpriseDescription", data.listOfStoreDetails);
+      localStorage.setItem("enterpriseId", data.entId);
+      localStorage.setItem("enterpriseDescription", data.enterpriseDescription);
+      localStorage.setItem(
+        "listOfStoreDetails",
+        JSON.stringify(data.listOfStoreDetails)
+      );
 
       // Handle Authentication Token
       if (data.token) {

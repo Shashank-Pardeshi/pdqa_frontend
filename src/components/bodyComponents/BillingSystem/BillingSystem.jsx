@@ -37,7 +37,7 @@ export default function BillingSystem() {
     try {
       // Check if the product exists in the specified store and enterprise
       const response = await axios.get(
-        `/api/gateway/inventory/getInventory?productId=${productId}&enterpriseId=${enterpriseId}&storeId=${storeId}`
+        `http://localhost:8080/api/gateway/inventory/getInventory?productId=${productId}&enterpriseId=${enterpriseId}&storeId=${storeId}`
       );
 
       const product = response.data;
