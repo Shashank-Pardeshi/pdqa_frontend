@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
+import Navbar from "../../LandingPage/Navbar/Navbar";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -215,169 +216,176 @@ export default function Register() {
   };
 
   return (
-    <Container
-      maxWidth="md"
-      sx={{
-        mt: 5,
-        backgroundColor: "#f4f6f8",
-        padding: 4,
-        borderRadius: 2,
-        boxShadow: 3,
-      }}
-    >
-      <Box display="flex" flexDirection="column" alignItems="center">
-        <Typography
-          variant="h4"
-          gutterBottom
-          sx={{ fontWeight: 600, color: "#1976D2" }}
-        >
-          Create Enterprise Account
-        </Typography>
-        <Typography variant="body1" gutterBottom sx={{ mb: 3 }}>
-          Fill in the details below to register your enterprise
-        </Typography>
+    <>
+      <Navbar></Navbar>
+      <Container
+        maxWidth="md"
+        sx={{
+          mt: 5,
+          backgroundColor: "#f4f6f8",
+          padding: 4,
+          borderRadius: 2,
+          boxShadow: 3,
+        }}
+      >
+        <Box display="flex" flexDirection="column" alignItems="center">
+          <Typography
+            variant="h4"
+            gutterBottom
+            sx={{ fontWeight: 600, color: "#1976D2" }}
+          >
+            Create Enterprise Account
+          </Typography>
+          <Typography variant="body1" gutterBottom sx={{ mb: 3 }}>
+            Fill in the details below to register your enterprise
+          </Typography>
 
-        {/* Success Message */}
-        {successMessage && (
-          <Alert severity="success" sx={{ width: "100%", mb: 2 }}>
-            {successMessage}
-          </Alert>
-        )}
+          {/* Success Message */}
+          {successMessage && (
+            <Alert severity="success" sx={{ width: "100%", mb: 2 }}>
+              {successMessage}
+            </Alert>
+          )}
 
-        {/* Error Message */}
-        {errorMessage && (
-          <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
-            {errorMessage}
-          </Alert>
-        )}
+          {/* Error Message */}
+          {errorMessage && (
+            <Alert severity="error" sx={{ width: "100%", mb: 2 }}>
+              {errorMessage}
+            </Alert>
+          )}
 
-        <form onSubmit={handleSubmit} style={{ width: "100%" }}>
-          <Box display="flex" flexDirection="column" gap="20px">
-            {/* Enterprise Details */}
-            <Typography variant="h6" sx={{ mt: 2 }}>
-              Enterprise Details
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Enterprise Name"
-                  variant="outlined"
-                  name="enterpriseName"
-                  value={formData.enterpriseName}
-                  onChange={handleChange}
-                  error={!!errors.enterpriseName}
-                  helperText={errors.enterpriseName}
-                  fullWidth
-                  sx={{ backgroundColor: "#fff" }}
-                  required
-                />
+          <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+            <Box display="flex" flexDirection="column" gap="20px">
+              {/* Enterprise Details */}
+              <Typography variant="h6" sx={{ mt: 2 }}>
+                Enterprise Details
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Enterprise Name"
+                    variant="outlined"
+                    name="enterpriseName"
+                    value={formData.enterpriseName}
+                    onChange={handleChange}
+                    error={!!errors.enterpriseName}
+                    helperText={errors.enterpriseName}
+                    fullWidth
+                    sx={{ backgroundColor: "#fff" }}
+                    required
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Enterprise Password"
+                    variant="outlined"
+                    type={showPassword ? "text" : "password"}
+                    name="enterprisePassword"
+                    value={formData.enterprisePassword}
+                    onChange={handleChange}
+                    error={!!errors.enterprisePassword}
+                    helperText={errors.enterprisePassword}
+                    fullWidth
+                    required
+                    sx={{ backgroundColor: "#fff" }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowPassword(!showPassword)}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Enterprise Password"
-                  variant="outlined"
-                  type={showPassword ? "text" : "password"}
-                  name="enterprisePassword"
-                  value={formData.enterprisePassword}
-                  onChange={handleChange}
-                  error={!!errors.enterprisePassword}
-                  helperText={errors.enterprisePassword}
-                  fullWidth
-                  required
-                  sx={{ backgroundColor: "#fff" }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-            </Grid>
-            <TextField
-              label="Enterprise Description"
-              variant="outlined"
-              name="enterpriseDescription"
-              value={formData.enterpriseDescription}
-              onChange={handleChange}
-              error={!!errors.enterpriseDescription}
-              helperText={errors.enterpriseDescription}
-              fullWidth
-              sx={{ backgroundColor: "#fff" }}
-              required
-            />
-            <TextField
-              label="Number of Stores"
-              variant="outlined"
-              type="number"
-              name="numberOfStores"
-              value={formData.numberOfStores}
-              onChange={handleChange}
-              error={!!errors.numberOfStores}
-              helperText={errors.numberOfStores}
-              fullWidth
-              sx={{ backgroundColor: "#fff" }}
-              required
-            />
+              <TextField
+                label="Enterprise Description"
+                variant="outlined"
+                name="enterpriseDescription"
+                value={formData.enterpriseDescription}
+                onChange={handleChange}
+                error={!!errors.enterpriseDescription}
+                helperText={errors.enterpriseDescription}
+                fullWidth
+                sx={{ backgroundColor: "#fff" }}
+                required
+              />
+              <TextField
+                label="Number of Stores"
+                variant="outlined"
+                type="number"
+                name="numberOfStores"
+                value={formData.numberOfStores}
+                onChange={handleChange}
+                error={!!errors.numberOfStores}
+                helperText={errors.numberOfStores}
+                fullWidth
+                sx={{ backgroundColor: "#fff" }}
+                required
+              />
 
-            {/* Store Details */}
-            <Typography variant="h6">Store Details</Typography>
-            {formData.storeDetails.map((store, index) => (
-              <Box key={index} display="flex" gap="20px" sx={{ mb: 2 }}>
-                <TextField
-                  label="Billing Counters"
-                  variant="outlined"
-                  type="number"
-                  value={store.billingCounters}
-                  onChange={(e) =>
-                    handleStoreChange(index, "billingCounters", e.target.value)
-                  }
-                  error={!!errors[`billingCounters_${index}`]}
-                  helperText={errors[`billingCounters_${index}`]}
-                  fullWidth
-                  sx={{ backgroundColor: "#fff" }}
-                  required
-                />
-                <TextField
-                  label="Inventory Counters"
-                  variant="outlined"
-                  type="number"
-                  value={store.inventoryCounters}
-                  onChange={(e) =>
-                    handleStoreChange(
-                      index,
-                      "inventoryCounters",
-                      e.target.value
-                    )
-                  }
-                  error={!!errors[`inventoryCounters_${index}`]}
-                  helperText={errors[`inventoryCounters_${index}`]}
-                  fullWidth
-                  sx={{ backgroundColor: "#fff" }}
-                  required
-                />
-              </Box>
-            ))}
+              {/* Store Details */}
+              <Typography variant="h6">Store Details</Typography>
+              {formData.storeDetails.map((store, index) => (
+                <Box key={index} display="flex" gap="20px" sx={{ mb: 2 }}>
+                  <TextField
+                    label="Billing Counters"
+                    variant="outlined"
+                    type="number"
+                    value={store.billingCounters}
+                    onChange={(e) =>
+                      handleStoreChange(
+                        index,
+                        "billingCounters",
+                        e.target.value
+                      )
+                    }
+                    error={!!errors[`billingCounters_${index}`]}
+                    helperText={errors[`billingCounters_${index}`]}
+                    fullWidth
+                    sx={{ backgroundColor: "#fff" }}
+                    required
+                  />
+                  <TextField
+                    label="Inventory Counters"
+                    variant="outlined"
+                    type="number"
+                    value={store.inventoryCounters}
+                    onChange={(e) =>
+                      handleStoreChange(
+                        index,
+                        "inventoryCounters",
+                        e.target.value
+                      )
+                    }
+                    error={!!errors[`inventoryCounters_${index}`]}
+                    helperText={errors[`inventoryCounters_${index}`]}
+                    fullWidth
+                    sx={{ backgroundColor: "#fff" }}
+                    required
+                  />
+                </Box>
+              ))}
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={loading}
-              sx={{ mt: 3 }}
-            >
-              {loading ? <CircularProgress size={24} /> : "Register"}
-            </Button>
-          </Box>
-        </form>
-      </Box>
-    </Container>
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+                sx={{ mt: 3 }}
+              >
+                {loading ? <CircularProgress size={24} /> : "Register"}
+              </Button>
+            </Box>
+          </form>
+        </Box>
+      </Container>
+    </>
   );
 }

@@ -17,6 +17,7 @@ import AddStore from "./components/bodyComponents/AddStore/AddStore";
 import UpdateInventory from "./components/bodyComponents/Inventory/UpdateInventory";
 import ViewInventory from "./components/bodyComponents/Inventory/ViewInventory";
 import AddProduct from "./components/bodyComponents/AddProduct/AddProduct";
+import About from "./components/LandingPage/About/About";
 
 function App() {
   const theme = createTheme({
@@ -46,7 +47,8 @@ function App() {
   const router = createBrowserRouter(
     createRoutesFromElements(
       <>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/about" replace />} />
+        <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 

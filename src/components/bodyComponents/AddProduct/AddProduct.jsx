@@ -57,6 +57,20 @@ const AddProduct = () => {
         enterpriseId, // Add enterpriseId here
       };
 
+      const a = {
+        body: JSON.stringify({
+          productDetails: [
+            {
+              productName: productData.productName,
+              productCategory: productData.category,
+              description: productData.productDescription,
+            },
+          ],
+          enterpriseId: localStorage.getItem("enterpriseId"), // Include enterpriseId here
+        }),
+      };
+      console.log(a);
+
       try {
         const response = await fetch(
           "http://localhost:8080/api/gateway/inventory/addProduct",
@@ -71,9 +85,10 @@ const AddProduct = () => {
                   productName: productData.productName,
                   productCategory: productData.category,
                   description: productData.productDescription,
+                  enterpriseId: localStorage.getItem("enterpriseId"),
                 },
               ],
-              enterpriseId: productData.enterpriseId, // Include enterpriseId here
+              enterpriseId: localStorage.getItem("enterpriseId"), // Include enterpriseId here
             }),
           }
         );
