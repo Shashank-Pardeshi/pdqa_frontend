@@ -14,95 +14,103 @@ import {
   Box,
 } from "@mui/material";
 import axios from "axios";
-import { jsPDF } from "jspdf";
+import jsPDF from "jspdf";
 
 export default function BillingSystem() {
   const [storeId, setStoreId] = useState("");
-  const [billingId, setBillingId] = useState("");
-  const [productId, setProductId] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [products, setProducts] = useState([]);
-  const [totalAmount, setTotalAmount] = useState(0);
-  const [errorMessage, setErrorMessage] = useState(""); // State for error message
-  const [quantityError, setQuantityError] = useState(""); // State for quantity error
+  const [counterId, setCounterId] = useState("");
+  const [productName, setProductName] = useState("");
+  const [billedUnits, setBilledUnits] = useState(1);
+  const [listOfPurchases, setListOfPurchases] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [billDetails, setBillDetails] = useState(null);
 
-  // Fetch product details by product ID and validate against store and enterprise ID
-  const handleAddProduct = async () => {
-    const enterpriseId = localStorage.getItem("enterpriseId"); // Retrieve enterprise ID from local storage
+  const handleAddProduct = () => {
+    if (!productName || billedUnits < 1) {
+      setErrorMessage("Invalid Product ID or Quantity.");
+      return;
+    }
+
+    const newProduct = {
+      productName,
+      billedUnits,
+    };
+
+    setListOfPurchases((prevProducts) => [...prevProducts, newProduct]);
+    setProductName("");
+    setBilledUnits(1);
+    setErrorMessage("");
+  };
+
+  const handleSendToBackend = async () => {
+    const enterpriseId = localStorage.getItem("enterpriseId");
+
     if (!enterpriseId) {
       alert("Enterprise ID not found in local storage.");
       return;
     }
 
+    if (!storeId || !counterId) {
+      alert("Store ID and Counter ID are required.");
+      return;
+    }
+
+    if (listOfPurchases.length === 0) {
+      alert("No listOfPurchases added to send to backend.");
+      return;
+    }
+
+    const payload = {
+      enterpriseId,
+      storeId,
+      counterId,
+      listOfPurchases,
+    };
+
     try {
-      // Check if the product exists in the specified store and enterprise
-      const response = await axios.get(
-        `http://localhost:8080/api/gateway/inventory/getInventory?productId=${productId}&enterpriseId=${enterpriseId}&storeId=${storeId}`
+      const response = await axios.post(
+        "http://localhost:8080/api/gateway/billing/createBill",
+        payload
       );
 
-      const product = response.data;
+      alert("Bill created successfully!");
+      console.log("Response:", response);
 
-      // If product is not found, handle error
-      if (!product) {
-        setErrorMessage("Product not found in this store."); // Set error message
-        return;
-      }
+      // Save bill details to display
+      setBillDetails(response.data);
 
-      // Check if the entered quantity is greater than available stock
-      if (quantity > product.quantity) {
-        setQuantityError(
-          `Quantity exceeds available stock (${product.quantity}).`
-        );
-        return;
-      } else {
-        setQuantityError(""); // Clear quantity error if valid
-      }
-
-      // Calculate product total price based solely on selling price
-      const productTotalPrice = product.sellprice * quantity;
-
-      // Add the product to the products array
-      const newProduct = {
-        ...product,
-        quantity,
-        total_price: productTotalPrice,
-      };
-
-      setProducts((prevProducts) => [...prevProducts, newProduct]);
-      setTotalAmount((prevTotal) => prevTotal + productTotalPrice);
-      setProductId(""); // Clear the product ID field
-      setQuantity(1); // Reset quantity
-      setErrorMessage(""); // Clear error message
+      // Reset state
+      setListOfPurchases([]);
+      setStoreId("");
+      setCounterId("");
     } catch (err) {
-      console.error("Error fetching product details:", err);
-      setErrorMessage("Error fetching product details."); // Set error message
+      console.error("Error sending listOfPurchases to backend:", err);
+      alert("Error creating the bill.");
     }
   };
 
-  // Handle finishing and generating the bill
-  const handleFinishBill = () => {
+  const generatePDF = () => {
+    if (!billDetails) return;
+
     const doc = new jsPDF();
+    doc.setFontSize(16);
 
-    doc.text(`Store ID: ${storeId}`, 10, 10);
-    doc.text(`Billing ID: ${billingId}`, 10, 20);
+    // Add bill details
+    doc.text(`Billing ID: ${billDetails.billingId}`, 10, 20);
 
-    let yPosition = 30;
-    doc.text("Product List:", 10, yPosition);
-    yPosition += 10;
-
-    products.forEach((product, index) => {
-      doc.text(
-        `${index + 1}. ${product.name} - Quantity: ${
-          product.quantity
-        }, Total Price: ₹${product.total_price.toFixed(2)}`,
-        10,
-        yPosition
-      );
-      yPosition += 10;
+    // Add product details
+    let y = 40;
+    billDetails.listOfProducts.forEach((product, index) => {
+      doc.text(`${index + 1}. Product: ${product.productId}`, 10, y);
+      doc.text(`   Quantity: ${product.billedQuantity}`, 10, y + 10);
+      y += 20;
     });
 
-    doc.text(`Total Amount: ₹${totalAmount.toFixed(2)}`, 10, yPosition + 10);
-    doc.save("bill.pdf"); // Save the bill as PDF
+    doc.save("bill.pdf");
+  };
+
+  const handleGoBack = () => {
+    setBillDetails(null);
   };
 
   return (
@@ -126,156 +134,158 @@ export default function BillingSystem() {
           Billing Counter
         </Typography>
 
-        {/* Store ID and Billing ID Inputs */}
-        <Box
-          display="flex"
-          gap={2}
-          mb={3}
-          sx={{
-            backgroundColor: "#f0f0f0",
-            padding: 2,
-            borderRadius: 2,
-            boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-          }}
-        >
-          <TextField
-            label="Store ID"
-            value={storeId}
-            onChange={(e) => setStoreId(e.target.value)}
-            fullWidth
-            sx={{ backgroundColor: "#fff", borderRadius: 2 }}
-          />
-          <TextField
-            label="Billing ID"
-            value={billingId}
-            onChange={(e) => setBillingId(e.target.value)}
-            fullWidth
-            sx={{ backgroundColor: "#fff", borderRadius: 2 }}
-          />
-        </Box>
+        {!billDetails && (
+          <>
+            <Box display="flex" gap={2} mb={3}>
+              <TextField
+                label="Store ID"
+                value={storeId}
+                onChange={(e) => setStoreId(e.target.value)}
+                fullWidth
+              />
+              <TextField
+                label="Counter ID"
+                value={counterId}
+                onChange={(e) => setCounterId(e.target.value)}
+                fullWidth
+              />
+            </Box>
 
-        {/* Add Product Section */}
-        <Box
-          display="flex"
-          gap={2}
-          mb={3}
-          sx={{
-            backgroundColor: "#f0f0f0",
-            padding: 2,
-            borderRadius: 2,
-            boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-          }}
-        >
-          <TextField
-            label="Product ID"
-            value={productId}
-            onChange={(e) => setProductId(e.target.value)}
-            fullWidth
-            sx={{ backgroundColor: "#fff", borderRadius: 2 }}
-          />
-          <TextField
-            label="Quantity"
-            type="number"
-            value={quantity}
-            onChange={(e) => setQuantity(parseInt(e.target.value))}
-            fullWidth
-            sx={{ backgroundColor: "#fff", borderRadius: 2 }}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleAddProduct}
-            sx={{
-              padding: "10px 20px",
-              backgroundColor: "#1976D2",
-              "&:hover": { backgroundColor: "#125a9c" },
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            }}
-          >
-            Add Product
-          </Button>
-        </Box>
+            <Box display="flex" gap={2} mb={3}>
+              <TextField
+                label="Product ID"
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
+                fullWidth
+              />
+              <TextField
+                label="Quantity"
+                type="number"
+                value={billedUnits}
+                onChange={(e) => setBilledUnits(parseInt(e.target.value) || 1)}
+                fullWidth
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleAddProduct}
+              >
+                Add Product
+              </Button>
+            </Box>
 
-        {/* Error Messages */}
-        {errorMessage && (
-          <Typography color="error" align="center">
-            {errorMessage}
-          </Typography>
-        )}
-        {quantityError && (
-          <Typography color="error" align="center">
-            {quantityError}
-          </Typography>
-        )}
+            {errorMessage && (
+              <Typography color="error" align="center">
+                {errorMessage}
+              </Typography>
+            )}
 
-        {/* Product List Table */}
-        {products.length > 0 && (
-          <TableContainer
-            component={Paper}
-            sx={{
-              mt: 4,
-              borderRadius: 2,
-              backgroundColor: "#fff",
-              boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell align="center">
-                    <strong>Name</strong>
-                  </TableCell>
-                  <TableCell align="center">
-                    <strong>Category</strong>
-                  </TableCell>
-                  <TableCell align="center">
-                    <strong>Selling Price</strong>
-                  </TableCell>
-                  <TableCell align="center">
-                    <strong>Quantity</strong>
-                  </TableCell>
-                  <TableCell align="center">
-                    <strong>Total Price</strong>
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {products.map((product, index) => (
-                  <TableRow key={index}>
-                    <TableCell align="center">{product.name}</TableCell>
-                    <TableCell align="center">{product.category}</TableCell>
-                    <TableCell align="center">{product.sellprice}</TableCell>
-                    <TableCell align="center">{product.quantity}</TableCell>
-                    <TableCell align="center">
-                      {product.total_price.toFixed(2)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+            {listOfPurchases.length > 0 && (
+              <>
+                <TableContainer component={Paper} sx={{ mt: 4 }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell align="center">Product ID</TableCell>
+                        <TableCell align="center">Quantity</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {listOfPurchases.map((product, index) => (
+                        <TableRow key={index}>
+                          <TableCell align="center">
+                            {product.productName}
+                          </TableCell>
+                          <TableCell align="center">
+                            {product.billedUnits}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                <Box mt={4} textAlign="center">
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleSendToBackend}
+                  >
+                    Send to Backend
+                  </Button>
+                </Box>
+              </>
+            )}
+          </>
         )}
 
-        {/* Total Amount and Finish Button */}
-        {products.length > 0 && (
-          <Box mt={4} textAlign="center">
-            <Typography variant="h6" gutterBottom>
-              Total Amount: ₹{totalAmount.toFixed(2)}
-            </Typography>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleFinishBill}
-              sx={{
-                mt: 2,
-                padding: "10px 20px",
-                backgroundColor: "#E53935",
-                "&:hover": { backgroundColor: "#B71C1C" },
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-              }}
+        {/* Display Bill Details */}
+        {billDetails && (
+          <Box mt={4}>
+            <Typography
+              variant="h5"
+              align="center"
+              color="primary"
+              gutterBottom
             >
-              Finish & Generate Bill
-            </Button>
+              Bill Summary
+            </Typography>
+            <Typography align="center">Billing ID: {billDetails.id}</Typography>
+            <Typography align="center">
+              Billing ID: {billDetails.sellingDate}
+            </Typography>
+
+            <TableContainer component={Paper} sx={{ mt: 4 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center">Product ID</TableCell>
+                    <TableCell align="center">Quantity</TableCell>
+                    <TableCell align="center">Billing Counter</TableCell>
+                    <TableCell align="center">Price (per unit)</TableCell>
+                    <TableCell align="center">Total Price</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {billDetails.listOfProducts.map((product, index) => (
+                    <TableRow key={index}>
+                      <TableCell align="center">{product.productId}</TableCell>
+                      <TableCell align="center">
+                        {product.billedQuantity}
+                      </TableCell>
+                      <TableCell align="center">{product.counterId}</TableCell>
+                      <TableCell align="center">
+                        ${product.billingPrice}
+                      </TableCell>
+                      <TableCell align="center">
+                        $
+                        {(
+                          product.billedQuantity * product.billingPrice
+                        ).toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            <Box
+              mt={4}
+              textAlign="center"
+              display="flex"
+              justifyContent="center"
+              gap={2}
+            >
+              <Button variant="contained" color="primary" onClick={generatePDF}>
+                Generate PDF
+              </Button>
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={handleGoBack}
+              >
+                Go Back
+              </Button>
+            </Box>
           </Box>
         )}
       </Paper>

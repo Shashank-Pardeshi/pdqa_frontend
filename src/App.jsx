@@ -18,6 +18,7 @@ import UpdateInventory from "./components/bodyComponents/Inventory/UpdateInvento
 import ViewInventory from "./components/bodyComponents/Inventory/ViewInventory";
 import AddProduct from "./components/bodyComponents/AddProduct/AddProduct";
 import About from "./components/LandingPage/About/About";
+import Billing_Continue from "./components/bodyComponents/BillingSystem/Billiing_Continue";
 
 function App() {
   const theme = createTheme({
@@ -59,6 +60,7 @@ function App() {
           <Route path="/viewinventory" element={<ViewInventory />} />
           <Route path="/addstore" element={<AddStore />} />
           <Route path="/billing" element={<BillingSystem />} />
+          <Route path="/billing_Continue" element={<Billing_Continue />} />
           <Route path="/addproduct" element={<AddProduct />} />
         </Route>
       </>

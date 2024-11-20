@@ -1,13 +1,6 @@
 import React, { useState } from "react";
 import {
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Typography,
   TextField,
   Grid,
@@ -16,49 +9,32 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from "@mui/material";
 import * as XLSX from "xlsx";
-import axios from "axios";
+// import axios from "axios";
 
 export default function UpdateInventory() {
   const [enterpriseId, setEnterpriseId] = useState("");
   const [storeId, setStoreId] = useState("");
   const [counterId, setCounterId] = useState("");
-  const [uploadOption, setUploadOption] = useState(""); // Either 'file' or 'manual'
+  const [uploadOption, setUploadOption] = useState("");
   const [file, setFile] = useState(null);
   const [data, setData] = useState([]);
-  const [csvErrors, setCsvErrors] = useState([]); // To track errors in CSV data
+  const [csvErrors, setCsvErrors] = useState([]);
   const [newProduct, setNewProduct] = useState({
-    productId: "",
+    productName: "",
     costPrice: "",
     sellingPrice: "",
     numberOfUnits: "",
   });
-  const [sampleCSVOpen, setSampleCSVOpen] = useState(false); // Track dialog state
   const [errors, setErrors] = useState({});
 
-  // Handle store, enterprise, and counter selection
-  const handleEnterpriseChange = (e) => {
-    setEnterpriseId(e.target.value);
-  };
+  const handleEnterpriseChange = (e) => setEnterpriseId(e.target.value);
+  const handleStoreChange = (e) => setStoreId(e.target.value);
+  const handleCounterChange = (e) => setCounterId(e.target.value);
 
-  const handleStoreChange = (e) => {
-    setStoreId(e.target.value);
-  };
-
-  const handleCounterChange = (e) => {
-    setCounterId(e.target.value);
-  };
-
-  // Handle file upload and parse the CSV file with validation
   const handleFileUpload = (e) => {
     const uploadedFile = e.target.files[0];
-
     if (!uploadedFile.name.endsWith(".csv")) {
       alert("Please upload a valid CSV file.");
       setFile(null);
@@ -66,7 +42,6 @@ export default function UpdateInventory() {
     }
 
     setFile(uploadedFile);
-
     const reader = new FileReader();
     reader.onload = (event) => {
       const binaryStr = event.target.result;
@@ -74,7 +49,6 @@ export default function UpdateInventory() {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const parsedData = XLSX.utils.sheet_to_json(sheet);
-
       const { validData, errors } = validateCSVData(parsedData);
       setData(validData);
       setCsvErrors(errors);
@@ -82,104 +56,93 @@ export default function UpdateInventory() {
     reader.readAsBinaryString(uploadedFile);
   };
 
-  // Validate CSV data
   const validateCSVData = (csvData) => {
     const newErrors = [];
     const validData = csvData.map((row, index) => {
       const errorsForRow = {};
-
-      if (!row.productId) {
-        errorsForRow.productId = "Product ID is required.";
-      }
-      if (!Number.isInteger(row.costPrice)) {
+      if (!row.productName)
+        errorsForRow.productName = "Product Name is required.";
+      if (!Number.isInteger(row.costPrice))
         errorsForRow.costPrice = "Cost price must be an integer.";
-      }
-      if (!Number.isInteger(row.sellingPrice)) {
+      if (!Number.isInteger(row.sellingPrice))
         errorsForRow.sellingPrice = "Selling price must be an integer.";
-      }
-      if (!Number.isInteger(row.numberOfUnits)) {
+      if (!Number.isInteger(row.numberOfUnits))
         errorsForRow.numberOfUnits = "Number of units must be an integer.";
-      }
-
-      if (!row.enterpriseId) {
+      if (!row.enterpriseId)
         errorsForRow.enterpriseId = "Enterprise ID is required.";
-      }
-      if (!row.storeId) {
-        errorsForRow.storeId = "Store ID is required.";
-      }
-      if (!row.counterId) {
-        errorsForRow.counterId = "Counter ID is required.";
-      }
+      if (!row.storeId) errorsForRow.storeId = "Store ID is required.";
+      if (!row.counterId) errorsForRow.counterId = "Counter ID is required.";
 
       if (Object.keys(errorsForRow).length > 0) {
         newErrors.push({ row: index + 1, errors: errorsForRow });
       }
-
       return row;
     });
 
     return { validData, errors: newErrors };
   };
 
-  // Handle manual product input
   const handleManualInputChange = (e) => {
-    setNewProduct({
-      ...newProduct,
-      [e.target.name]: e.target.value,
-    });
+    setNewProduct({ ...newProduct, [e.target.name]: e.target.value });
   };
 
-  const handleManualSubmit = () => {
-    const { productId, costPrice, sellingPrice, numberOfUnits } = newProduct;
+  const handleManualSubmit = async () => {
+    const { productName, costPrice, sellingPrice, numberOfUnits } = newProduct;
     const validationErrors = {};
 
-    // Validate the enterprise, store, and counter IDs
-    if (!enterpriseId) {
+    if (!enterpriseId)
       validationErrors.enterpriseId = "Enterprise ID is required.";
-    }
-    if (!storeId) {
-      validationErrors.storeId = "Store ID is required.";
-    }
-    if (!counterId) {
-      validationErrors.counterId = "Counter ID is required.";
-    }
-
-    // Validate product fields
-    if (!productId) {
-      validationErrors.productId = "Product ID is required.";
-    }
-    if (!costPrice || isNaN(costPrice)) {
+    if (!storeId) validationErrors.storeId = "Store ID is required.";
+    if (!counterId) validationErrors.counterId = "Counter ID is required.";
+    if (!productName)
+      validationErrors.productName = "Product Name is required.";
+    if (!costPrice || isNaN(costPrice))
       validationErrors.costPrice = "Cost price must be a number.";
-    }
-    if (!sellingPrice || isNaN(sellingPrice)) {
+    if (!sellingPrice || isNaN(sellingPrice))
       validationErrors.sellingPrice = "Selling price must be a number.";
-    }
-    if (!numberOfUnits || isNaN(numberOfUnits)) {
+    if (!numberOfUnits || isNaN(numberOfUnits))
       validationErrors.numberOfUnits = "Number of units must be a number.";
-    }
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
     } else {
-      // Post the data to the backend
-      const postData = {
-        productId,
+      const payload = {
+        productName: productName,
         costPrice: parseInt(costPrice),
         sellingPrice: parseInt(sellingPrice),
-        enterpriseId,
-        storeId,
-        counterId,
+        enterpriseId: enterpriseId,
+        storeId: storeId,
+        counterId: counterId,
         numberOfUnits: parseInt(numberOfUnits),
       };
 
-      axios
-        .post("/api/inventory/update", postData)
-        .then((response) => {
-          console.log("Inventory updated successfully", response.data);
-        })
-        .catch((error) => {
-          console.error("Error updating inventory", error);
-        });
+      // axios
+      //   .post("/api/createInventoryRecord", postData)
+      //   .then((response) =>
+      //     console.log("Inventory record created successfully", response.data)
+      //   )
+      //   .catch((error) =>
+      //     console.error("Error creating inventory record", error)
+      //   );
+
+      const response = await fetch(
+        "http://localhost:8080/api/gateway/inventory/createInventoryRecord",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        },
+        console.log(payload)
+      );
+
+      console.log(response);
+      if (response.ok) {
+        console.log("success");
+      } else {
+        console.log("error occured");
+      }
     }
   };
 
@@ -188,8 +151,6 @@ export default function UpdateInventory() {
       <Typography variant="h4" gutterBottom>
         Update Inventory
       </Typography>
-
-      {/* Store, Enterprise, and Counter Selection */}
       <Grid container spacing={2} sx={{ marginBottom: 2 }}>
         <Grid item xs={4}>
           <TextField
@@ -222,8 +183,6 @@ export default function UpdateInventory() {
           />
         </Grid>
       </Grid>
-
-      {/* Upload option selector */}
       <FormControl fullWidth>
         <InputLabel id="upload-option-label">Upload Option</InputLabel>
         <Select
@@ -235,53 +194,17 @@ export default function UpdateInventory() {
           <MenuItem value="manual">Manual Input</MenuItem>
         </Select>
       </FormControl>
-
-      {/* CSV File Upload */}
-      {uploadOption === "file" && (
-        <Box sx={{ marginTop: 2 }}>
-          <Button variant="contained" component="label">
-            Upload CSV File
-            <input
-              type="file"
-              accept=".csv"
-              hidden
-              onChange={handleFileUpload}
-            />
-          </Button>
-
-          {/* Display CSV errors if any */}
-          {csvErrors.length > 0 && (
-            <Box sx={{ marginTop: 2 }}>
-              <Typography variant="h6">CSV Errors:</Typography>
-              {csvErrors.map((error, index) => (
-                <Typography key={index}>
-                  Row {error.row}: {JSON.stringify(error.errors)}
-                </Typography>
-              ))}
-            </Box>
-          )}
-          <Button
-            variant="outlined"
-            onClick={() => setSampleCSVOpen(true)}
-            sx={{ marginTop: 2 }}
-          >
-            View Sample CSV Format
-          </Button>
-        </Box>
-      )}
-
-      {/* Manual Product Input */}
       {uploadOption === "manual" && (
         <Grid container spacing={2} sx={{ marginTop: 2 }}>
           <Grid item xs={6}>
             <TextField
-              label="Product ID"
-              name="productId"
-              value={newProduct.productId}
+              label="Product Name"
+              name="productName"
+              value={newProduct.productName}
               onChange={handleManualInputChange}
               fullWidth
-              error={!!errors.productId}
-              helperText={errors.productId}
+              error={!!errors.productName}
+              helperText={errors.productName}
             />
           </Grid>
           <Grid item xs={3}>
@@ -328,30 +251,6 @@ export default function UpdateInventory() {
           </Grid>
         </Grid>
       )}
-
-      {/* Dialog for Sample CSV */}
-      <Dialog
-        open={sampleCSVOpen}
-        onClose={() => setSampleCSVOpen(false)}
-        maxWidth="md"
-      >
-        <DialogTitle>Sample CSV Format</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Please use the following format for your CSV file:
-          </Typography>
-          <Typography>
-            <strong>
-              productId, costPrice, sellingPrice, enterpriseId, storeId,
-              counterId, numberOfUnits
-            </strong>
-          </Typography>
-          <Typography>Example: 123, 20, 25, 1, 1, 1, 100</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSampleCSVOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
     </Container>
   );
 }

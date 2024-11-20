@@ -50,18 +50,15 @@ export default function SideBarComponent() {
       title: "ViewInventory",
       component: <Inventory2Outlined fontSize="medium" color="primary" />,
     },
-    {
-      title: "AddStore",
-      component: <CardTravelOutlined fontSize="medium" color="primary" />,
-    },
+    // {
+    //   title: "AddStore",
+    //   component: <CardTravelOutlined fontSize="medium" color="primary" />,
+    // },
     {
       title: "AddProduct",
       component: <CardTravelOutlined fontSize="medium" color="primary" />,
     },
-    // {
-    //   title: "Customers",
-    //   component: <PeopleAltOutlined fontSize="medium" color="primary" />,
-    // },
+
     // {
     //   title: "Revenue",
     //   component: <MonetizationOnOutlined fontSize="medium" color="primary" />,
@@ -81,6 +78,10 @@ export default function SideBarComponent() {
     {
       title: "Billing",
       component: <SettingsOutlined fontSize="medium" color="primary" />,
+    },
+    {
+      title: "Billing_Continue",
+      component: <PeopleAltOutlined fontSize="medium" color="primary" />,
     },
   ];
   const [selected, setSelected] = useState(0);
